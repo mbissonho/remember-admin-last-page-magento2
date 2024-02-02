@@ -1,0 +1,15 @@
+<?php
+/* @var LastPageRemember $block */
+
+use Mbissonho\RememberAdminLastPage\Block\Adminhtml\LastPageRemember;
+use Mbissonho\RememberAdminLastPage\Helper\Data;
+$helper = $this->helper(Data::class);
+?>
+<?php if($helper->isActive()): ?>
+<script>
+    require([], function () {
+        sessionStorage.setItem('last-admin-page-accessed', '<?= json_encode($block->getPathData()) ?>')
+    });
+</script>
+<?php endif; ?>
+

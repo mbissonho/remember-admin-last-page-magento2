@@ -1,0 +1,12 @@
+<?php
+/* @var Template $block */
+
+use Magento\Framework\View\Element\Template;
+use Mbissonho\RememberAdminLastPage\Helper\Data;
+
+?>
+<?php if($this->helper(Data::class)->isActive()): ?>
+<input type="hidden" name="last-admin-page-accessed"
+       value=""
+       data-mage-init='{"Mbissonho_RememberAdminLastPage/js/fill-hiden-input": {}}' />
+<?php endif; ?>

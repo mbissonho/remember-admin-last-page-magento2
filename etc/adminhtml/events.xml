@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="controller_action_predispatch_adminhtml_dashboard_index">
+        <observer name="mbissonho_remember_admin_last_page_dashboard_page_observer"
+                  instance="Mbissonho\RememberAdminLastPage\Observer\DashboardPageObserver"/>
+    </event>
+    <event name="backend_auth_user_login_success">
+        <observer name="mbissonho_remember_admin_last_page_user_login_observer"
+                  instance="Mbissonho\RememberAdminLastPage\Observer\UserLoginObserver"/>
+    </event>
+</config>
