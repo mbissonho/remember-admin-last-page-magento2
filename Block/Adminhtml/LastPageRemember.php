@@ -2,7 +2,7 @@
 
 namespace Mbissonho\RememberAdminLastPage\Block\Adminhtml;
 
-use Magento\Backend\Model\Url;
+use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\View\Element\Template;
 
 class LastPageRemember extends Template
@@ -27,7 +27,7 @@ class LastPageRemember extends Template
 
         $firstParamKey = array_key_first($requestParams);
 
-        if(empty($firstParamKey) || $firstParamKey === Url::SECRET_KEY_PARAM_NAME) {
+        if(empty($firstParamKey) || $firstParamKey === UrlInterface::SECRET_KEY_PARAM_NAME) {
             return $details;
         }
 
