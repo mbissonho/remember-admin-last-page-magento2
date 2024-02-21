@@ -1,5 +1,10 @@
 # Remember Admin Last Page Magento 2 module
 
+[![Latest Stable Version](https://img.shields.io/packagist/v/mbissonho/module-remember-admin-last-page.svg?style=flat-square)](https://packagist.org/packages/mbissonho/module-remember-admin-last-page)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/mbissonho/module-remember-admin-last-page?style=flat-square)](https://packagist.org/packages/mbissonho/module-remember-admin-last-page)
+[![Packagist Downloads](https://img.shields.io/packagist/dm/mbissonho/module-remember-admin-last-page?style=flat-square)](https://packagist.org/packages/mbissonho/module-remember-admin-last-page)
+
+
 This module allow an admin user to come back to the same page(order, customer or config management) when it's session expires.
 
 ## Prerequisites
@@ -12,7 +17,13 @@ This module allow an admin user to come back to the same page(order, customer or
 This module can be installed via composer:
 
 ```shell
-composer require mbissonho/module-remenber-admin-last-page
+$ composer require mbissonho/module-remenber-admin-last-page
+```
+
+After the installation, run:
+
+```shell
+$ ./bin/magento setup:upgrade && ./bin/magento setup:di:compile
 ```
 
 ## Get Started
