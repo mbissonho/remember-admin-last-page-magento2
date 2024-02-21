@@ -4,7 +4,7 @@
     <system>
         <section id="admin">
             <group id="mbissonho_remember_admin_last_page" translate="label" type="text" sortOrder="2000" showInDefault="1">
-                <label>Remenber Admin Last Page</label>
+                <label>Remember Admin Last Page</label>
                 <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1">
                     <label>Active</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
