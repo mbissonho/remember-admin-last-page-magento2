@@ -16,7 +16,7 @@ This module allow an admin user to come back to the same page(order, customer or
 This module can be installed via composer:
 
 ```shell
-composer require mbissonho/module-remenber-admin-last-page
+composer require mbissonho/module-remember-admin-last-page
 ```
 
 After the installation, run:
