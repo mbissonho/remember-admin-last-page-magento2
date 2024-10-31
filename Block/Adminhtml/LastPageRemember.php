@@ -42,7 +42,4 @@ class LastPageRemember extends Template
         $request = $this->getRequest();
         return "{$request->getRouteName()}/{$request->getControllerName()}/{$request->getActionName()}";
     }
-
-
-
 }

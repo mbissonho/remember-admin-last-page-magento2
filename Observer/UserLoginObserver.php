@@ -28,11 +28,11 @@ class UserLoginObserver implements ObserverInterface
     {
         if(!$this->dataHelper->isActive()) return;
 
-        $last = $this->om->get(RequestInterface::class)
-            ->getParam('last-admin-page-accessed');
+        $lastAccessedPageJsonAsString = $this->om->get(RequestInterface::class)
+            ->getParam('mbissonho-last-admin-page-accessed');
 
-        if(!empty($last)) {
-            $this->om->get(StorageInterface::class)->setLastPage($last);
+        if(!empty($lastAccessedPageJsonAsString)) {
+            $this->om->get(StorageInterface::class)->setLastPage($lastAccessedPageJsonAsString);
         }
     }
 }

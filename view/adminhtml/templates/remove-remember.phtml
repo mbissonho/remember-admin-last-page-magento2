@@ -9,7 +9,7 @@ $helper = $this->helper(Data::class);
 <?php if($helper->isActive() && $helper->shouldRemove()): ?>
     <script>
         require([], function () {
-            sessionStorage.removeItem('last-admin-page-accessed');
+            sessionStorage.removeItem('mbissonho-last-admin-page-accessed');
         });
     </script>
 <?php endif; ?>

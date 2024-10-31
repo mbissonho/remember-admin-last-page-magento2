@@ -3,11 +3,11 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="form.additional.info">
-            <block name="login-session-storage-hidden-input"
+            <block name="mbissonho-login-session-storage-hidden-input"
                 template="Mbissonho_RememberAdminLastPage::login-session-storage-hidden-input.phtml"
                 cacheable="false"
             />
-            <block name="remove-remember"
+            <block name="mbissonho-remove-remember"
                    template="Mbissonho_RememberAdminLastPage::remove-remember.phtml"
                    cacheable="false"
             />

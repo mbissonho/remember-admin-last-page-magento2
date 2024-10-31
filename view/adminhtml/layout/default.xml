@@ -4,7 +4,7 @@
     <body>
         <referenceContainer name="before.body.end">
             <block class="Mbissonho\RememberAdminLastPage\Block\Adminhtml\LastPageRemember"
-                   name="last-page-remember"
+                   name="mbissonho-last-page-remember"
                    template="Mbissonho_RememberAdminLastPage::last-page-remember.phtml"/>
         </referenceContainer>
     </body>

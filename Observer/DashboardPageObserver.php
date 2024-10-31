@@ -34,35 +34,48 @@ class DashboardPageObserver implements ObserverInterface
     {
         if(!$this->dataHelper->isActive()) return;
 
+        if(!$lastAccessedPageJsonAsArray = $this->willBeAbleToPerformRedirect()) return;
         $this->action = $observer->getEvent()->getData('controller_action');
 
-        $storage = $this->om->get(StorageInterface::class);
-
-        $last = $storage->getLastPage();
-
-        if(null === $last) return;
-
-        $last = json_decode($last, true);
-
-        if(!$storage->isFirstPageAfterLogin() || empty($last['route_path'])) return;
-
-        if($last['edit_details']['url_entity_param_value'] !== 0) {
-            $this->redirect(
-                $last['route_path'],
-                $last['edit_details']['url_entity_param_name'],
-                $last['edit_details']['url_entity_param_value']
+        //Try perform redirect to entity page(customer, product, etc) if possible
+        if($lastAccessedPageJsonAsArray['edit_details']['url_entity_param_value'] !== 0) {
+            $this->performRedirectToLastAccessedPage(
+                $lastAccessedPageJsonAsArray['route_path'],
+                $lastAccessedPageJsonAsArray['edit_details']['url_entity_param_name'],
+                $lastAccessedPageJsonAsArray['edit_details']['url_entity_param_value']
             );
             return;
         }
 
-        $this->redirect($last['route_path']);
+        $this->performRedirectToLastAccessedPage($lastAccessedPageJsonAsArray['route_path']);
     }
 
-    private function redirect(string $routePath, $urlEntityParamName = null, $urlEntityParamValue = null): void
+    protected function willBeAbleToPerformRedirect(): mixed
+    {
+        $storage = $this->om->get(StorageInterface::class);
+        $lastAccessedPageJsonAsString = $storage->getLastPage();
+
+        if(null === $lastAccessedPageJsonAsString) return false;
+
+        $lastAccessedPageJsonAsArray = \json_decode($lastAccessedPageJsonAsString, true);
+
+        if(!$storage->isFirstPageAfterLogin() || empty($lastAccessedPageJsonAsArray['route_path'])) return false;
+
+        return $lastAccessedPageJsonAsArray;
+    }
+
+
+    protected function performRedirectToLastAccessedPage(string $routePath, $urlEntityParamName = null, $urlEntityParamValue = null): void
     {
         $this->om->get(ActionFlag::class)->set('', ActionInterface::FLAG_NO_DISPATCH, true);
-        $this->action->getResponse()
-            ->setRedirect($this->om->get(UrlInterface::class)->getUrl(
-                $routePath, [$urlEntityParamName => $urlEntityParamValue]));
+        $this->action
+            ->getResponse()
+            ->setRedirect(
+                $this->om->get(UrlInterface::class)
+                    ->getUrl(
+                        $routePath,
+                        [$urlEntityParamName => $urlEntityParamValue]
+                    )
+            );
     }
 }

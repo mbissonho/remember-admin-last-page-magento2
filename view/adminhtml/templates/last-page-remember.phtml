@@ -8,7 +8,7 @@ $helper = $this->helper(Data::class);
 <?php if($helper->isActive()): ?>
 <script>
     require([], function () {
-        sessionStorage.setItem('last-admin-page-accessed', '<?= json_encode($block->getPathData()) ?>')
+        sessionStorage.setItem('mbissonho-last-admin-page-accessed', '<?= json_encode($block->getPathData()) ?>')
     });
 </script>
 <?php endif; ?>

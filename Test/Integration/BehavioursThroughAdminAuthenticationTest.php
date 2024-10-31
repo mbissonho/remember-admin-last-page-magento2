@@ -80,7 +80,7 @@ class BehavioursThroughAdminAuthenticationTest extends AbstractController
                     'password' => \Magento\TestFramework\Bootstrap::ADMIN_PASSWORD,
                 ],
                 'form_key' => $formKey->getFormKey(),
-                'last-admin-page-accessed' => "{\"foo\": \"bar\"}"
+                'mbissonho-last-admin-page-accessed' => "{\"foo\": \"bar\"}"
             ]
         );
 

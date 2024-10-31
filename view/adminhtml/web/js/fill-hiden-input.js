@@ -9,7 +9,7 @@ define([
 
         /** @inheritdoc */
         _create: function () {
-            let last = sessionStorage.getItem('last-admin-page-accessed');
+            let last = sessionStorage.getItem('mbissonho-last-admin-page-accessed');
 
             if(last) {
                 this.element.val(last);
