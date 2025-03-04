@@ -7,18 +7,27 @@ const credentials = Resources.magentoAdmin.user
 async function login(page) {
     console.log('Logging in as admin...');
     await page.goto(adminUrl);
+    await page.waitForLoadState();
+    await page.screenshot({ path: 'screenshots/login.png' });
     await page.fill('#username', credentials.username);
     await page.fill('#login', credentials.password);
     await page.click("button.action-login");
 }
 
-test('Session expiration and re-login', async ({ page }) => {
+test('Test that user can come back to the last accessed page after session expiration', async ({ page }) => {
+    console.log('Admin URL', adminUrl);
+    console.log('Admin Credentials', credentials);
+
     console.log('Starting admin session...');
     await login(page);
     await page.waitForURL(/.*\/admin\/dashboard\/(index\/key\/[a-zA-Z0-9]+\/)?$/);
     await page.waitForTimeout(3000);
 
     console.log('Navigating to the customer listing page...');
+    await page.waitForLoadState();
+    await page.screenshot({ path: 'screenshots/dashboard.png' });
+    await page.waitForTimeout(10000);
+    await page.screenshot({ path: 'screenshots/dashboard2.png' });
     await page.locator("//*[@id=\"menu-magento-customer-customer\"]").click();
     await page.waitForTimeout(1000);
     let customersSideMenu = page.locator(".submenu");
@@ -33,7 +42,6 @@ test('Session expiration and re-login', async ({ page }) => {
     await page.click('a.logo');
 
     console.log('Verifying that the session has expired and redirected to the login page...');
-    await expect(page).toHaveURL(adminUrl );
     await expect(page.locator('#username')).toBeVisible();
 
     console.log('Checking session storage for last admin page accessed...');

@@ -8,8 +8,11 @@ on:
       - 'main'
 
 jobs:
-  integration-tests:
-    name: Integration Tests
+  run:
+    strategy:
+      matrix:
+        php-version: [ "8.3" ]
+        magento-version: [ "2.4.7-p4" ]
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -30,8 +33,9 @@ jobs:
         options: --health-cmd="curl localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - uses: actions/checkout@v3
-      - name: Magento 2.4.6 Integration Tests (Php8.2)
-        uses: extdn/github-actions-m2/magento-integration-tests/8.2@master
+      - name: Magento ${{ matrix.magento-version }} Integration Tests (Php${{ matrix.php-version }})
+        uses: extdn/github-actions-m2/magento-integration-tests/${{ matrix.php-version }}@master
         with:
           module_name: Mbissonho_RememberAdminLastPage
           composer_name: mbissonho/module-remember-admin-last-page
+          magento_version: ${{ matrix.magento-version }}
