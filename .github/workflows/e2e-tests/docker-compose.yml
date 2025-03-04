@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb:10.4
+    container_name: e2e-mariadb
+    networks:
+      - backend
+    environment:
+      MARIADB_ROOT_PASSWORD: root_password
+      MARIADB_DATABASE: magento
+      MARIADB_USER: magento
+      MARIADB_PASSWORD: magento
+  opensearch:
+    image: bitnami/opensearch:2
+    container_name: e2e-opensearch
+    networks:
+      - backend
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+  web:
+    build:
+      context: .
+      args:
+        - PHP_VERSION=${PHP_VERSION}
+        - MAGENTO_VERSION=${MAGENTO_VERSION}
+    container_name: e2e-magento2
+    extra_hosts:
+      - ${MAGENTO_HOST}:127.0.0.1
+#    ports:
+#      - 80:80
+    networks:
+      backend:
+        aliases:
+          - ${MAGENTO_HOST}
+    environment:
+      DB_SERVER: e2e-mariadb
+      OPENSEARCH_SERVER: e2e-opensearch
+      MAGENTO_HOST: ${MAGENTO_HOST}
+      VIRTUAL_HOST: ${MAGENTO_HOST}
+      COMPOSER_MEMORY_LIMIT: -1
+      ADMIN_URLEXT: admin
+    depends_on:
+      - db
+      - opensearch
+    volumes:
+      - ../../../:/data/extensions/workdir
+      - composer:/usr/local/bin
+      - magento:/var/www/html
+networks:
+  backend:
+volumes:
+  magento:
+  composer:

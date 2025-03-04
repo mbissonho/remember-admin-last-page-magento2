@@ -1,0 +1,54 @@
+name: E2E Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - 'main'
+jobs:
+  run:
+    strategy:
+      matrix:
+        php-version: ["8.3"]
+        magento-version: [ "2.4.7-p4"]
+    runs-on: ubuntu-latest
+    env:
+      PHP_VERSION: ${{ matrix.php-version }}
+      MAGENTO_VERSION: ${{ matrix.magento-version }}
+      MAGENTO_ADMIN_USERNAME: admin
+      MAGENTO_ADMIN_PASSWORD: admin123
+      MAGENTO_HOST: magento2.test.com
+      MAGENTO_BASE_URL: http://magento2.test.com
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Magento
+        run: |
+          docker compose -f .github/workflows/e2e-tests/docker-compose.yml run --rm web bash -c "sed '/exec /d' /tmp/install_magento.sh | bash"
+      - name: Start web server in background
+        run: docker compose -f .github/workflows/e2e-tests/docker-compose.yml up -d web
+      - name: Setup permissions
+        run: |
+          docker exec e2e-magento2 bash -c "find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} + &&
+          find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} + &&
+          chmod 777 -R var &&
+          chown -R www-data:www-data . &&
+          chmod u+x bin/magento &&
+          echo 'memory_limit = -1' > /usr/local/etc/php/conf.d/memory.ini"
+      - name: Install Extension
+        run: |
+         docker exec -u www-data e2e-magento2 bash -c "/tmp/install_extension.sh"
+      - name: Run E2E Tests
+        run: |
+          docker compose -f .github/workflows/e2e-tests/docker-compose.playwright.yml run playwright \
+          bash -c "chmod +x /tmp/module/.github/workflows/e2e-tests/run-e2e.sh && /tmp/module/.github/workflows/e2e-tests/run-e2e.sh"
+        env:
+          CI: TRUE
+      - name: Archive test result artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report
+          path: test-report
+
+
