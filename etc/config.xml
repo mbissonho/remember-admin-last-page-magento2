@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <admin>
+            <mbissonho_remember_admin_last_page>
+                <active_notification_message>0</active_notification_message>
+                <has_saved_page_notification_message>You can come back to your last accessed page if sign in</has_saved_page_notification_message>
+                <go_to_the_saved_page_notification_message>Go to the page</go_to_the_saved_page_notification_message>
+                <login_page_title_blink_message>Sign in to come back to your last accessed page</login_page_title_blink_message>
+            </mbissonho_remember_admin_last_page>
+        </admin>
+    </default>
+</config>

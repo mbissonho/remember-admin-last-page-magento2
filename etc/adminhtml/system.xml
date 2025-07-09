@@ -9,6 +9,31 @@
                     <label>Active</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="active_notification_message" translate="label" type="select" sortOrder="5" showInDefault="1">
+                    <label>Active Notification Message</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="has_saved_page_notification_message" translate="label" type="text" sortOrder="10" showInDefault="1">
+                    <label>Has saved page notification message</label>
+                    <validate>required-entry validate-no-empty</validate>
+                    <depends>
+                        <field id="active_notification_message">1</field>
+                    </depends>
+                </field>
+                <field id="go_to_the_saved_page_notification_message" translate="label" type="text" sortOrder="20" showInDefault="1">
+                    <label>Go to the saved page notification message</label>
+                    <validate>required-entry validate-no-empty</validate>
+                    <depends>
+                        <field id="active_notification_message">1</field>
+                    </depends>
+                </field>
+                <field id="login_page_title_blink_message" translate="label" type="text" sortOrder="30" showInDefault="1">
+                    <label>Login page title blink message</label>
+                    <validate>required-entry validate-no-empty</validate>
+                    <depends>
+                        <field id="active_notification_message">1</field>
+                    </depends>
+                </field>
             </group>
         </section>
     </system>

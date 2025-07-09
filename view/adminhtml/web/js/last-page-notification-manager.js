@@ -1,8 +1,9 @@
 define([
     'jquery',
     'underscore',
+    'mage/translate',
     'mage/cookies'
-], function ($, _) {
+], function ($, $t, _) {
     'use strict';
 
     $.widget('mbissonho.lastPageNotificationManager', {
@@ -10,23 +11,25 @@ define([
         toastyContainer: undefined,
         linkDisplayed: false,
         originalPageTitle: document.title,
+        checkInterval: undefined,
         /** @inheritdoc */
         _create: function () {
             this.toastyContainer = $('#toast-container');
 
             if(this.hasLastAccessedPageOnBrowserSession()){
-                this.showToast("You can come back to your last accessed page if sign in", false);
+                this.showToast(String($t(this.options.hasSavedPageNotificationMessage)), false);
                 this.blinkPageTitle();
+                this.checkInterval = setInterval(function () {
+                    this.checkIfAdminUserIsLoggedIn()
+                }.bind(this), 5000);
             }
-
-            setInterval(function () {
-                this.checkIfAdminUserIsLoggedIn()
-            }.bind(this), 25000);
         },
 
         blinkPageTitle: function () {
             setInterval(function () {
-                document.title = document.title === this.originalPageTitle ? '123' : this.originalPageTitle
+                document.title = document.title === this.originalPageTitle ?
+                    $t(this.options.loginPageTitleBlinkMessage) :
+                    this.originalPageTitle
             }.bind(this), 3000);
         },
 
@@ -38,7 +41,7 @@ define([
             let self = this;
             //TODO: Change to the correct backend front name
             $.ajax({
-                url: `${window.location.origin}/admin/mbissonho_ralp/index/isloggedin`,
+                url: self.options.backendUrl,
                 showLoader: false,
                 dataType: 'json',
                 type: 'GET',
@@ -50,8 +53,12 @@ define([
                                 {},
                                 response.secret_key
                             );
+                            clearInterval(self.checkInterval);
                         }
+                    } else {
+                        self.linkDisplayed = false;
                     }
+
                 },
                 complete: function (jqXHR) {
                     //Override ajaxSetup to avoid page reload
@@ -64,8 +71,8 @@ define([
 
         buildAndDisplayLinkToLastAccessedPage: function (lastAccessedPageObject, secretKey) {
             let self = this, link = `${window.location.origin}/admin/customer/index/index/key/${secretKey}`
-            const linkElement  = `<a href="${link}">Go to the page</a>`;
-            self.showToast(linkElement);
+            const linkElement  = `<a href="${link}">${this.options.goToTheSavedPageNotificationMessage}</a>`;
+            self.showToast(linkElement, false);
             self.linkDisplayed = true;
         },
 
