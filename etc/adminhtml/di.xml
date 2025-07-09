@@ -6,4 +6,11 @@
                 type="Mbissonho\RememberAdminLastPage\Plugin\AdminLogoutAfter"
         />
     </type>
+
+    <type name="Mbissonho\RememberAdminLastPage\Controller\Adminhtml\Index\IsLoggedIn">
+        <arguments>
+            <argument name="url" xsi:type="object">Magento\Backend\Model\UrlInterface\Proxy</argument>
+        </arguments>
+    </type>
+
 </config>

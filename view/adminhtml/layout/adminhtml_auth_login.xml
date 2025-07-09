@@ -12,5 +12,11 @@
                    cacheable="false"
             />
         </referenceContainer>
+        <referenceContainer name="root">
+            <block name="mbissonho-last-page-notification-manager"
+                   template="Mbissonho_RememberAdminLastPage::last-page-notification-manager.phtml"
+                   before="login.footer"
+            />
+        </referenceContainer>
     </body>
 </page>

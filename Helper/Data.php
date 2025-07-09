@@ -2,12 +2,10 @@
 
 namespace Mbissonho\RememberAdminLastPage\Helper;
 
-use Magento\Backend\Model\Auth\StorageInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\ObjectManagerInterface;
-use Magento\Backend\Model\Session;
 
 class Data extends AbstractHelper
 {

@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+      - 'feature/**'
+      - 'fix/**'
   pull_request:
     branches:
       - 'main'
