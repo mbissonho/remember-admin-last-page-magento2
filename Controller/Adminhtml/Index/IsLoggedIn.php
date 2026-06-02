@@ -8,39 +8,100 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 
+/**
+ * Reports whether an admin session is currently authenticated and, when it is,
+ * returns a ready-to-use link to the page the polling tab had stored.
+ *
+ * This is an intentionally public, admin-routed GET endpoint. It is polled from
+ * the login page (an unauthenticated context that has no admin secret key) to
+ * detect a successful sign-in in another tab. It must therefore keep answering
+ * the very moment the shared session becomes valid.
+ *
+ * The destination URL is built server-side from the route stored in the polling
+ * tab's session storage (passed in as request params), because only the server
+ * can mint the per-route admin secret key the URL needs. The route is validated
+ * to a strict `route/controller/action` shape and falls back to the dashboard.
+ *
+ * Because this controller does not extend Magento\Backend\App\AbstractAction,
+ * Magento\Backend\App\Request\BackendValidator falls back to secret-key
+ * validation and, for a logged-in GET without a "key" param, returns 401 (AJAX)
+ * or 302 to the startup page. Implementing CsrfAwareActionInterface and
+ * returning `true` from validateForCsrf() is the documented way to opt this
+ * specific endpoint out of that secret-key check. Do NOT remove it: doing so
+ * breaks the cross-tab polling (the request 401s as soon as the user logs in).
+ *
+ * This is safe here: the action only reads session state and builds an internal
+ * admin URL, it never mutates anything, it is a GET (the Same-Origin Policy
+ * stops cross-origin scripts from reading the JSON body), and to unauthenticated
+ * callers it discloses only a boolean.
+ */
 class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
 {
+    private const ROUTE_PATH_PATTERN = '#^[a-z0-9_]+/[a-z0-9_]+/[a-z0-9_]+$#i';
+    private const PARAM_NAME_PATTERN = '#^[a-z0-9_]+$#i';
+
     protected JsonFactory $resultJsonFactory;
     protected AuthSession $authSession;
     protected UrlInterface $url;
+    protected RequestInterface $request;
 
     public function __construct(
         JsonFactory $resultJsonFactory,
         AuthSession $authSession,
-        UrlInterface $url
+        UrlInterface $url,
+        RequestInterface $request
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
         $this->authSession = $authSession;
         $this->url = $url;
+        $this->request = $request;
     }
 
-    public function execute()
+    public function execute(): Json
     {
         $jsonResult = $this->resultJsonFactory->create();
-        $isLoggedIn = $this->authSession->isLoggedIn();
 
-        if(!$isLoggedIn) {
-            return $jsonResult->setData([
-                'logged_in' => $isLoggedIn,
-            ]);
+        if (!$this->authSession->isLoggedIn()) {
+            return $jsonResult->setData(['logged_in' => false]);
         }
 
         return $jsonResult->setData([
-            'logged_in' => $isLoggedIn,
-            'secret_key' => $this->url->getSecretKey('customer', 'index', 'index')
+            'logged_in' => true,
+            'redirect_url' => $this->buildLastPageUrl(),
         ]);
+    }
+
+    /**
+     * Build a keyed admin URL for the route stored in the polling tab.
+     *
+     * Falls back to the dashboard (whose predispatch observer redirects to the
+     * last accessed page) when no valid route was provided.
+     */
+    private function buildLastPageUrl(): string
+    {
+        $routePath = (string)$this->request->getParam('route_path', '');
+
+        if (!preg_match(self::ROUTE_PATH_PATTERN, $routePath)) {
+            return $this->url->getUrl('adminhtml/dashboard');
+        }
+
+        $params = [];
+        $entityParamName = (string)$this->request->getParam('entity_param_name', '');
+        $entityParamValue = $this->request->getParam('entity_param_value');
+
+        if ($entityParamName !== ''
+            && preg_match(self::PARAM_NAME_PATTERN, $entityParamName)
+            && is_scalar($entityParamValue)
+            && (string)$entityParamValue !== ''
+            && (string)$entityParamValue !== '0'
+        ) {
+            $params[$entityParamName] = $entityParamValue;
+        }
+
+        return $this->url->getUrl($routePath, $params);
     }
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
@@ -50,6 +111,8 @@ class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
 
     public function validateForCsrf(RequestInterface $request): ?bool
     {
+        // Read-only GET endpoint that must be reachable without a secret key
+        // (see class docblock). Opting out of secret-key/CSRF validation here.
         return true;
     }
 }

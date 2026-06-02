@@ -6,6 +6,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: '././',
+  /* Runs once, before any worker/spec: verifies the Magento scenario and aborts
+   * the whole run (without changing any config) if it is inadequate. */
+  globalSetup: './global-setup.js',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

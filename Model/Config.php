@@ -15,8 +15,7 @@ class Config
 
     public function __construct(
         ScopeConfigInterface $config
-    )
-    {
+    ) {
         $this->config = $config;
     }
 
@@ -25,20 +24,18 @@ class Config
         return $this->config->isSetFlag(self::XML_PATH_NOTIFICATION_MESSAGE_ACTIVE);
     }
 
-    public function hasSavedPageNotificationMessage()
+    public function hasSavedPageNotificationMessage(): ?string
     {
         return $this->config->getValue(self::XML_PATH_HAS_SAVED_PAGE_NOTIFICATION_MESSAGE);
     }
 
-    public function goToTheSavedPageNotificationMessage()
+    public function goToTheSavedPageNotificationMessage(): ?string
     {
         return $this->config->getValue(self::XML_PATH_GO_TO_THE_SAVED_PAGE_NOTIFICATION_MESSAGE);
     }
 
-    public function loginPageTitleBlinkMessage()
+    public function loginPageTitleBlinkMessage(): ?string
     {
         return $this->config->getValue(self::XML_PATH_LOGIN_PAGE_TITLE_BLINK_MESSAGE);
     }
-
-
 }
