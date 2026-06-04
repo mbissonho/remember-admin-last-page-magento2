@@ -13,4 +13,14 @@
         </arguments>
     </type>
 
+    <!--
+        Resume a stale-secret-key bounce back to its own page instead of the
+        dashboard, fully server-side (see the plugin's class docblock). Applies
+        to every admin controller that extends Magento\Backend\App\AbstractAction.
+    -->
+    <type name="Magento\Backend\App\AbstractAction">
+        <plugin name="mbissonho_remember_admin_last_page_resume_on_secret_key_bounce"
+                type="Mbissonho\RememberAdminLastPage\Plugin\Backend\ResumeOnSecretKeyBounce"/>
+    </type>
+
 </config>
