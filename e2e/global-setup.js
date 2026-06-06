@@ -144,7 +144,24 @@ function moduleState(rawOutput) {
     if (out.includes('is enabled')) {
         return 'enabled';
     }
+    // A module that is not installed at all cannot interfere with the suite, so
+    // report it as a distinct "absent" state. The caller treats absent as
+    // satisfying a "disabled" requirement (e.g. Magento_TwoFactorAuth may simply
+    // not be present in the build under test).
+    if (out.includes('module does not exist')) {
+        return 'absent';
+    }
     return `unknown ("${rawOutput}")`;
+}
+
+/** True when the actual module state satisfies the required one. */
+function moduleStateSatisfies(state, want) {
+    if (state === want) {
+        return true;
+    }
+    // An absent module behaves like a disabled one for our purposes: it is not
+    // loaded and cannot block login or render any overlay.
+    return want === 'disabled' && state === 'absent';
 }
 
 export default async function globalSetup() {
@@ -179,7 +196,7 @@ export default async function globalSetup() {
     for (const req of MODULE_REQUIREMENTS) {
         try {
             const state = moduleState(magento(`module:status ${req.module}`));
-            if (state !== req.want) {
+            if (!moduleStateSatisfies(state, req.want)) {
                 problems.push(`module ${req.module} is "${state}" (expected "${req.want}") — ${req.why}`);
             }
         } catch (error) {
