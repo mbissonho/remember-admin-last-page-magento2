@@ -28,7 +28,22 @@ const adminUrl = baseURL + '/admin/admin/';
 const credentials = Resources.magentoAdmin.user;
 
 async function signIn(page) {
-    await page.goto(adminUrl);
+    // The admin sign-in navigation can transiently fail with net::ERR_ABORTED:
+    // reaching /admin/admin/ goes through the secret-key bounce/redirect chain,
+    // and a superseded main-frame navigation surfaces as an abort. Retry the
+    // goto on that specific error and wait only for domcontentloaded so a
+    // mid-flight redirect does not abort us while waiting for full load.
+    for (let attempt = 1; ; attempt++) {
+        try {
+            await page.goto(adminUrl, { waitUntil: 'domcontentloaded' });
+            break;
+        } catch (error) {
+            if (attempt >= 3 || !String(error).includes('ERR_ABORTED')) {
+                throw error;
+            }
+            await page.waitForTimeout(500);
+        }
+    }
     // Generous timeout: the full suite runs files in parallel, so the admin can
     // be slow to render under concurrent load; the 5s default is too tight.
     await expect(page.locator('#username')).toBeVisible({ timeout: 30000 });

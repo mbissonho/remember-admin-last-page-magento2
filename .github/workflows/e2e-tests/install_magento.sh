@@ -65,16 +65,31 @@ else
 	mv composer.phar /usr/local/bin/composer
 fi
 
-if [[ -d /var/www/html/vendor/magento ]]; then
-	echo "Magento is already installed."
-else
+# Install Composer dependencies only when the code is missing. The app volume
+# persists across local `act` runs, so this is usually a no-op there; on CI the
+# code is always fresh, so it runs.
+if [[ ! -d /var/www/html/vendor/magento ]]; then
 	composer install -n
+fi
 
-	find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
-	find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
-	chown -R www-data:www-data .
-	chmod u+x bin/magento
+# Normalize permissions before any bin/magento call (idempotent and cheap).
+find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} + 2>/dev/null
+find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} + 2>/dev/null
+chown -R www-data:www-data .
+chmod u+x bin/magento
 
+# Decide whether to (re)install from the DATABASE state, not just the presence of
+# code. The app volume persists between runs but the `db` service is ephemeral,
+# so the code can be present while the database is empty — Magento then bootstraps
+# into "The store that was requested wasn't found". Treat "no store rows" as
+# "needs install". On CI everything is fresh, so this always installs, as before.
+STORE_COUNT=$(mysql -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" \
+	-N -e "SELECT COUNT(*) FROM ${DB_PREFIX}store" "$DB_NAME" 2>/dev/null || echo 0)
+
+if [[ "${STORE_COUNT:-0}" -gt 0 ]]; then
+	echo "Magento is already installed (found ${STORE_COUNT} store(s) in the database)."
+else
+	echo "No stores found in the database — running setup:install."
 	bin/magento setup:install \
 		--base-url="http://$MAGENTO_HOST" \
 		--db-host="$DB_SERVER:$DB_PORT" \
