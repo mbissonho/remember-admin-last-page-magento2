@@ -1,0 +1,75 @@
+# Local dependencies for running integration-tests.yml with `gh act`.
+#
+# Why this file exists:
+#   `act` does not read docker-compose, and its support for a job's `services:`
+#   is partial — it commonly ignores the `options:` health-cmd (so it never
+#   waits for readiness) and has networking gaps. The extdn integration action
+#   then runs `setup:install` before MySQL/Elasticsearch are reachable and fails,
+#   which looks like "the services didn't come up". This compose brings the same
+#   MySQL 8.0 + Elasticsearch 8.11 up ourselves, on a named network, exposing the
+#   exact hostnames (`mysql`, `es`) the extdn action hardcodes.
+#
+# IMPORTANT: run the LOCAL workflow (act-integration.yml in this folder), NOT the
+# CI workflow ../../integration-tests.yml. The CI one declares `services:`, which
+# act both fails to expose by hostname to the extdn action (nektos/act#944) and
+# starts anyway — grabbing ports 3306/9200 and conflicting with these containers.
+#
+# Usage:
+#   1. Start deps and wait until healthy:
+#        docker compose -f .github/workflows/integration-tests/docker-compose.yml up -d --wait
+#   2. Run the LOCAL workflow, attaching act's containers to this network so the
+#      extdn action can resolve `mysql` and `es`:
+#        gh act push -W .github/workflows/integration-tests/act-integration.yml -j run \
+#          --network integration-local
+#   3. Tear down:
+#        docker compose -f .github/workflows/integration-tests/docker-compose.yml down -v
+#
+# Note: keep running `act` with `-W` (as above). A non-workflow YAML living under
+# .github/workflows/ would otherwise be parsed as a workflow by a bare `act`.
+
+name: m2-integration-local
+
+services:
+  mysql:
+    image: mysql:8.0
+    # mysql_native_password avoids caching_sha2 handshake surprises with older
+    # clients when poking the DB locally; Magento itself works either way.
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    # Mirrors the workflow's `--tmpfs /var/lib/mysql` for a fast, disposable DB.
+    tmpfs:
+      - /var/lib/mysql
+    networks:
+      default:
+        aliases:
+          - mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  es:
+    # Magento 2.4.8 installs with --search-engine=elasticsearch8 (set by the
+    # extdn action), whose client rejects OpenSearch — so this must be ES 8.
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.4
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    networks:
+      default:
+        aliases:
+          - es
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+
+# Named so `act --network integration-local` can attach the job/action
+# containers to the same network as these services.
+networks:
+  default:
+    name: integration-local
