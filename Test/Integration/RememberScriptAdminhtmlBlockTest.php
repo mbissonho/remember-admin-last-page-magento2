@@ -27,7 +27,7 @@ class RememberScriptAdminhtmlBlockTest extends AbstractBackendController
      * @magentoConfigFixture admin/mbissonho_remember_admin_last_page/active 0
      * @magentoAppIsolation enabled
      */
-    public function testHtmlDoesNotContainsRememberScriptOnceModuleIsEnabled()
+    public function testHtmlDoesNotContainsRememberScriptOnceModuleIsNotEnabled()
     {
         $this->dispatch('backend/customer/index/index/');
 
