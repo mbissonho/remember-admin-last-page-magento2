@@ -3,17 +3,55 @@
 namespace Mbissonho\RememberAdminLastPage\Block\Adminhtml;
 
 use Magento\Backend\Model\UrlInterface;
+use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\View\Element\Template;
+use Mbissonho\RememberAdminLastPage\Model\Config;
+use Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\EntityTokenizer;
+use Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\DetectorPool;
+use Mbissonho\RememberAdminLastPage\Model\LastPage\RoutePath;
 
 class LastPageRemember extends Template
 {
+    protected RoutePath $routePath;
+
+    protected Config $config;
+
+    protected DetectorPool $detectorPool;
+
+    protected EntityTokenizer $tokenizer;
+
+    public function __construct(
+        Template\Context $context,
+        RoutePath $routePath,
+        Config $config,
+        DetectorPool $detectorPool,
+        EntityTokenizer $tokenizer,
+        array $data = []
+    ) {
+        $this->routePath = $routePath;
+        $this->config = $config;
+        $this->detectorPool = $detectorPool;
+        $this->tokenizer = $tokenizer;
+        parent::__construct($context, $data);
+    }
 
     public function getPathData(): array
     {
-        return [
+        $data = [
             'route_path' => $this->getRoutePath(),
             'edit_details' => $this->getRouteEditDetailsAsJson()
         ];
+
+        // Optional, opt-in: a sealed, type-aware reference to the model this page
+        // is about, so the resume notification can hint which record it was (see
+        // the EntityPreview controller). Stored only when the feature is enabled
+        // and a detector recognises the page; ignored by older clients otherwise.
+        $entityToken = $this->getEntityToken();
+        if ($entityToken !== null) {
+            $data['entity_token'] = $entityToken;
+        }
+
+        return $data;
     }
 
     public function getRouteEditDetailsAsJson(): array
@@ -39,7 +77,25 @@ class LastPageRemember extends Template
 
     protected function getRoutePath(): string
     {
+        return $this->routePath->fromRequest($this->getRequest());
+    }
+
+    private function getEntityToken(): ?string
+    {
+        if (!$this->config->isEntityDetailsActive()) {
+            return null;
+        }
+
         $request = $this->getRequest();
-        return "{$request->getRouteName()}/{$request->getControllerName()}/{$request->getActionName()}";
+        if (!$request instanceof HttpRequest) {
+            return null;
+        }
+
+        $context = $this->detectorPool->detect($request);
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->tokenizer->tokenize($context);
     }
 }

@@ -9,6 +9,7 @@ use Magento\Backend\Model\Auth;
 use Magento\Backend\Model\UrlInterface as BackendUrl;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Mbissonho\RememberAdminLastPage\Helper\Data as DataHelper;
+use Mbissonho\RememberAdminLastPage\Model\LastPage\RoutePath;
 
 /**
  * Resumes an admin tab whose only problem is a stale secret key straight back to
@@ -50,8 +51,6 @@ use Mbissonho\RememberAdminLastPage\Helper\Data as DataHelper;
  */
 class ResumeOnSecretKeyBounce
 {
-    private const ROUTE_PATH_PATTERN = '#^[a-z0-9_]+/[a-z0-9_]+/[a-z0-9_]+$#i';
-
     /**
      * Params that must never be carried over when re-minting the URL: the stale
      * secret key, the AJAX markers and the POST form key.
@@ -69,14 +68,18 @@ class ResumeOnSecretKeyBounce
 
     protected DataHelper $dataHelper;
 
+    protected RoutePath $routePath;
+
     public function __construct(
         Auth $auth,
         BackendUrl $backendUrl,
-        DataHelper $dataHelper
+        DataHelper $dataHelper,
+        RoutePath $routePath
     ) {
         $this->auth = $auth;
         $this->backendUrl = $backendUrl;
         $this->dataHelper = $dataHelper;
+        $this->routePath = $routePath;
     }
 
     /**
@@ -142,11 +145,9 @@ class ResumeOnSecretKeyBounce
 
     private function buildResignedUrl(HttpRequest $request): ?string
     {
-        $routePath = $request->getRouteName()
-            . '/' . $request->getControllerName()
-            . '/' . $request->getActionName();
+        $path = $this->routePath->fromRequest($request);
 
-        if (!preg_match(self::ROUTE_PATH_PATTERN, $routePath)) {
+        if (!$this->routePath->isValid($path)) {
             return null;
         }
 
@@ -157,6 +158,6 @@ class ResumeOnSecretKeyBounce
         }
 
         // getUrl() re-mints the per-route secret key for the current session.
-        return $this->backendUrl->getUrl($routePath, $params);
+        return $this->backendUrl->getUrl($path, $params);
     }
 }

@@ -10,6 +10,8 @@ use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Mbissonho\RememberAdminLastPage\Model\Config;
+use Mbissonho\RememberAdminLastPage\Model\LastPage\RoutePath;
 
 /**
  * Reports whether an admin session is currently authenticated and, when it is,
@@ -40,29 +42,42 @@ use Magento\Framework\Controller\Result\JsonFactory;
  */
 class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
 {
-    private const ROUTE_PATH_PATTERN = '#^[a-z0-9_]+/[a-z0-9_]+/[a-z0-9_]+$#i';
     private const PARAM_NAME_PATTERN = '#^[a-z0-9_]+$#i';
 
     protected JsonFactory $resultJsonFactory;
     protected AuthSession $authSession;
     protected UrlInterface $url;
     protected RequestInterface $request;
+    protected Config $config;
+    protected RoutePath $routePath;
 
     public function __construct(
         JsonFactory $resultJsonFactory,
         AuthSession $authSession,
         UrlInterface $url,
-        RequestInterface $request
+        RequestInterface $request,
+        Config $config,
+        RoutePath $routePath
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
         $this->authSession = $authSession;
         $this->url = $url;
         $this->request = $request;
+        $this->config = $config;
+        $this->routePath = $routePath;
     }
 
     public function execute(): Json
     {
         $jsonResult = $this->resultJsonFactory->create();
+
+        // The login-page poller must stay inert unless both the module and its
+        // notification feature are enabled (same flags the notification block
+        // and observers gate on). Answer as "not logged in" so the JS never
+        // surfaces a resume link, even if the endpoint is reached directly.
+        if (!$this->config->isActive() || !$this->config->isNotificationManagerActive()) {
+            return $jsonResult->setData(['logged_in' => false]);
+        }
 
         if (!$this->authSession->isLoggedIn()) {
             return $jsonResult->setData(['logged_in' => false]);
@@ -82,9 +97,9 @@ class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
      */
     private function buildLastPageUrl(): string
     {
-        $routePath = (string)$this->request->getParam('route_path', '');
+        $path = (string)$this->request->getParam('route_path', '');
 
-        if (!preg_match(self::ROUTE_PATH_PATTERN, $routePath)) {
+        if (!$this->routePath->isValid($path)) {
             return $this->url->getUrl('adminhtml/dashboard');
         }
 
@@ -101,7 +116,7 @@ class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
             $params[$entityParamName] = $entityParamValue;
         }
 
-        return $this->url->getUrl($routePath, $params);
+        return $this->url->getUrl($path, $params);
     }
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException

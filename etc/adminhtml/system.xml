@@ -34,6 +34,14 @@
                         <field id="active_notification_message">1</field>
                     </depends>
                 </field>
+                <field id="active_entity_details" translate="label comment" type="select" sortOrder="40" showInDefault="1">
+                    <label>Show entity details on notification</label>
+                    <comment>When enabled, the notification also hints which record (order, customer, product…) the saved page was about. Values are shown partially masked and only to users with permission to view that entity.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="active_notification_message">1</field>
+                    </depends>
+                </field>
             </group>
         </section>
     </system>

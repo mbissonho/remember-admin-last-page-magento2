@@ -28,6 +28,16 @@ class LastPageNotificationManager extends Template
         return $this->_urlBuilder->getUrl('mbissonho_ralp/index/isloggedin');
     }
 
+    public function isEntityDetailsActive(): bool
+    {
+        return $this->config->isEntityDetailsActive();
+    }
+
+    public function getEntityPreviewUrl(): ?string
+    {
+        return $this->_urlBuilder->getUrl('mbissonho_ralp/index/entitypreview');
+    }
+
     public function hasSavedPageNotificationMessage(): ?string
     {
         return $this->config->hasSavedPageNotificationMessage();
