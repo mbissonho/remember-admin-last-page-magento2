@@ -16,20 +16,28 @@
         Capture side: route_path -> {entity_type_code, id_param}. Add an <item>
         here to remember a new page declaratively; add a detector to the pool
         below for routes that need custom id extraction.
+
+        entity_type_code is the join key shared with the resolver/formatter pools.
+        Namespace it with the vendor that OWNS the entity (vendor_entity) — the
+        first segment of the model's namespace: magento_order for Magento's sales
+        order, acme_subscription for your own Acme\Subscription\Model\Subscription.
+        Keying by the entity's owner (not by whoever wires it) means two modules
+        that describe the same entity converge on one code, while genuinely
+        different entities never collide on a bare word like "order".
     -->
     <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Detector\ConfigMapDetector">
         <arguments>
             <argument name="map" xsi:type="array">
                 <item name="sales/order/view" xsi:type="array">
-                    <item name="entity_type_code" xsi:type="string">order</item>
+                    <item name="entity_type_code" xsi:type="string">magento_order</item>
                     <item name="id_param" xsi:type="string">order_id</item>
                 </item>
                 <item name="customer/index/edit" xsi:type="array">
-                    <item name="entity_type_code" xsi:type="string">customer</item>
+                    <item name="entity_type_code" xsi:type="string">magento_customer</item>
                     <item name="id_param" xsi:type="string">id</item>
                 </item>
                 <item name="catalog/product/edit" xsi:type="array">
-                    <item name="entity_type_code" xsi:type="string">product</item>
+                    <item name="entity_type_code" xsi:type="string">magento_product</item>
                     <item name="id_param" xsi:type="string">id</item>
                 </item>
             </argument>
@@ -47,9 +55,9 @@
     <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\ResolverPool">
         <arguments>
             <argument name="resolvers" xsi:type="array">
-                <item name="order" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\OrderResolver</item>
-                <item name="customer" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\CustomerResolver</item>
-                <item name="product" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\ProductResolver</item>
+                <item name="magento_order" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\OrderResolver</item>
+                <item name="magento_customer" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\CustomerResolver</item>
+                <item name="magento_product" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\ProductResolver</item>
             </argument>
         </arguments>
     </type>
@@ -57,9 +65,9 @@
     <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\FormatterPool">
         <arguments>
             <argument name="formatters" xsi:type="array">
-                <item name="order" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\OrderFormatter</item>
-                <item name="customer" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\CustomerFormatter</item>
-                <item name="product" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\ProductFormatter</item>
+                <item name="magento_order" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\OrderFormatter</item>
+                <item name="magento_customer" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\CustomerFormatter</item>
+                <item name="magento_product" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\ProductFormatter</item>
             </argument>
         </arguments>
     </type>

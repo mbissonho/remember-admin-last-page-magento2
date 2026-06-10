@@ -52,7 +52,7 @@ class EntityPreviewTest extends AbstractBackendController
      */
     public function testReturnsNullWhenNotAuthenticated(): void
     {
-        $token = $this->tokenFor('customer', (string)$this->customerId());
+        $token = $this->tokenFor('magento_customer', (string)$this->customerId());
 
         // Drop the session AbstractBackendController logged in during setUp.
         $this->_auth->getAuthStorage()->destroy(['send_expire_cookie' => false]);
@@ -72,7 +72,7 @@ class EntityPreviewTest extends AbstractBackendController
      */
     public function testReturnsNullForTamperedToken(): void
     {
-        $valid = $this->tokenFor('customer', (string)$this->customerId());
+        $valid = $this->tokenFor('magento_customer', (string)$this->customerId());
 
         $pos = intdiv(strlen($valid), 2);
         $tampered = $valid;
@@ -93,7 +93,7 @@ class EntityPreviewTest extends AbstractBackendController
      */
     public function testReturnsNullWhenUserLacksEntityAclResource(): void
     {
-        $token = $this->tokenFor('customer', (string)$this->customerId());
+        $token = $this->tokenFor('magento_customer', (string)$this->customerId());
 
         $this->denyForCurrentAdmin(self::CUSTOMER_ACL);
 
@@ -125,7 +125,7 @@ class EntityPreviewTest extends AbstractBackendController
         );
 
         // The ACL gate precedes entity loading, so an arbitrary order id suffices.
-        $this->assertNull($this->dispatchPreview($this->tokenFor('order', '999999'))['details']);
+        $this->assertNull($this->dispatchPreview($this->tokenFor('magento_order', '999999'))['details']);
     }
 
     /**
@@ -139,7 +139,7 @@ class EntityPreviewTest extends AbstractBackendController
      */
     public function testReturnsMaskedCustomerDetailsOnHappyPath(): void
     {
-        $token = $this->tokenFor('customer', (string)$this->customerId());
+        $token = $this->tokenFor('magento_customer', (string)$this->customerId());
 
         $this->getRequest()->setParam('entity_token', $token);
         $this->getRequest()->setMethod('GET');

@@ -24,9 +24,9 @@ class PoolWiringTest extends TestCase
     {
         $pool = Bootstrap::getObjectManager()->get(ResolverPool::class);
 
-        $this->assertInstanceOf(OrderResolver::class, $pool->get('order'));
-        $this->assertInstanceOf(CustomerResolver::class, $pool->get('customer'));
-        $this->assertInstanceOf(ProductResolver::class, $pool->get('product'));
+        $this->assertInstanceOf(OrderResolver::class, $pool->get('magento_order'));
+        $this->assertInstanceOf(CustomerResolver::class, $pool->get('magento_customer'));
+        $this->assertInstanceOf(ProductResolver::class, $pool->get('magento_product'));
         $this->assertNull($pool->get('unknown_type'));
     }
 
@@ -34,9 +34,9 @@ class PoolWiringTest extends TestCase
     {
         $pool = Bootstrap::getObjectManager()->get(FormatterPool::class);
 
-        $this->assertInstanceOf(OrderFormatter::class, $pool->get('order'));
-        $this->assertInstanceOf(CustomerFormatter::class, $pool->get('customer'));
-        $this->assertInstanceOf(ProductFormatter::class, $pool->get('product'));
+        $this->assertInstanceOf(OrderFormatter::class, $pool->get('magento_order'));
+        $this->assertInstanceOf(CustomerFormatter::class, $pool->get('magento_customer'));
+        $this->assertInstanceOf(ProductFormatter::class, $pool->get('magento_product'));
         $this->assertNull($pool->get('unknown_type'));
     }
 }

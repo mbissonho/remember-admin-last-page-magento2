@@ -25,7 +25,7 @@ class EntityTokenizerTest extends TestCase
     public function testTokenIsOpaqueAndRoundTrips(): void
     {
         $context = $this->contextFactory->create([
-            'entityTypeCode' => 'order',
+            'entityTypeCode' => 'magento_order',
             'entityId' => '10523',
         ]);
 
@@ -33,19 +33,19 @@ class EntityTokenizerTest extends TestCase
 
         // Opaque: neither the id nor the plain "type:id" leak to the client.
         $this->assertStringNotContainsString('10523', $token);
-        $this->assertStringNotContainsString('order:10523', $token);
+        $this->assertStringNotContainsString('magento_order:10523', $token);
 
         $restored = $this->tokenizer->detokenize($token);
 
         $this->assertNotNull($restored);
-        $this->assertSame('order', $restored->getEntityTypeCode());
+        $this->assertSame('magento_order', $restored->getEntityTypeCode());
         $this->assertSame('10523', $restored->getEntityId());
     }
 
     public function testTamperedTokenIsRejected(): void
     {
         $context = $this->contextFactory->create([
-            'entityTypeCode' => 'order',
+            'entityTypeCode' => 'magento_order',
             'entityId' => '10523',
         ]);
 

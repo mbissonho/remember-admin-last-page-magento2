@@ -42,8 +42,7 @@ Relevant settings there:
 - **Enable notification message** — shows the "resume your last page" notification.
 - **Show entity details on notification** — *off by default.* When on (and the
   notification is on), the notification also shows masked details of the record the
-  saved page was about. This is the feature the rest of this README explains how to
-  extend.
+  saved page was about.
 
 ## How it works
 
@@ -85,9 +84,14 @@ The token sealing/opening between capture and display is automatic — you never
 touch it.
 
 > **The join key.** A single string, the `entity_type_code`, ties the three pools
-> together. The detector emits it; the `ResolverPool` and `FormatterPool` are keyed
-> by it. Use the *same* string everywhere (e.g. `cms_page`) and the pieces find
-> each other.
+> together: the detector emits it, and the `ResolverPool`/`FormatterPool` are keyed
+> by it. Use the *same* string everywhere, and **namespace it with the vendor that
+> owns the entity** — `vendor_entity`, the first segment of the model's namespace.
+> That is why the bundled types are `magento_order`, `magento_customer` and
+> `magento_product` (they are Magento core models), while an entity of your own
+> would be e.g. `acme_subscription`. Keying by the entity's owner — not by whoever
+> wires it — is what lets two modules describing the *same* entity converge on one
+> code, while genuinely different entities never clash on a bare word like `order`.
 
 ## Tutorial: show details for a new entity type
 
@@ -106,7 +110,7 @@ add an entry to the bundled `ConfigMapDetector` map in your module's
     <arguments>
         <argument name="map" xsi:type="array">
             <item name="cms/page/edit" xsi:type="array">
-                <item name="entity_type_code" xsi:type="string">cms_page</item>
+                <item name="entity_type_code" xsi:type="string">magento_cms_page</item>
                 <item name="id_param" xsi:type="string">page_id</item>
             </item>
         </argument>
@@ -116,6 +120,11 @@ add an entry to the bundled `ConfigMapDetector` map in your module's
 
 `route_path` is `frontName/controller/action`; `id_param` is the request parameter
 that carries the id on that route (CMS page edit uses `page_id`).
+
+Note the code is `magento_cms_page`, not `cms_page` or `vendor_cms_page`: a CMS Page
+belongs to `Magento\Cms`, so it is prefixed with the **entity's** owning vendor
+(`magento`), even though *your* module wiring it is `Vendor\Module`. Prefix with
+your own vendor only for entities you own (e.g. `acme_subscription`).
 
 > Need a page whose id is not a plain request param (composite keys, slugs, …)?
 > Implement `EntityContextDetectorInterface` and add it to the `DetectorPool`
@@ -212,13 +221,13 @@ structure-preserving `EmailMask`.
 ### 4. Wire both into the pools
 
 In the same `etc/adminhtml/di.xml`, register the resolver and formatter under the
-**same** `entity_type_code` you used in the map (`cms_page`):
+**same** `entity_type_code` you used in the map (`magento_cms_page`):
 
 ```xml
 <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\ResolverPool">
     <arguments>
         <argument name="resolvers" xsi:type="array">
-            <item name="cms_page" xsi:type="object">Vendor\Module\Model\RememberAdminLastPage\Resolver\CmsPageResolver</item>
+            <item name="magento_cms_page" xsi:type="object">Vendor\Module\Model\RememberAdminLastPage\Resolver\CmsPageResolver</item>
         </argument>
     </arguments>
 </type>
@@ -226,7 +235,7 @@ In the same `etc/adminhtml/di.xml`, register the resolver and formatter under th
 <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\FormatterPool">
     <arguments>
         <argument name="formatters" xsi:type="array">
-            <item name="cms_page" xsi:type="object">Vendor\Module\Model\RememberAdminLastPage\Formatter\CmsPageFormatter</item>
+            <item name="magento_cms_page" xsi:type="object">Vendor\Module\Model\RememberAdminLastPage\Formatter\CmsPageFormatter</item>
         </argument>
     </arguments>
 </type>
@@ -245,15 +254,15 @@ will read *"CMS Page — Title: …, URL Key: …"*.
 
 ### Add or change fields for a bundled type
 
-Pool items are keyed, so redefining an item with an existing key **replaces** the
-bundled one. To add a field to the customer card, point the `customer` formatter at
-your own class:
+Pool items are keyed, so redefining an item with the existing key **replaces** the
+bundled one. To add a field to the customer card, point the `magento_customer`
+formatter at your own class:
 
 ```xml
 <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\FormatterPool">
     <arguments>
         <argument name="formatters" xsi:type="array">
-            <item name="customer" xsi:type="object">Vendor\Module\Model\RememberAdminLastPage\Formatter\RicherCustomerFormatter</item>
+            <item name="magento_customer" xsi:type="object">Vendor\Module\Model\RememberAdminLastPage\Formatter\RicherCustomerFormatter</item>
         </argument>
     </arguments>
 </type>
