@@ -109,6 +109,11 @@ const CONFIG_REQUIREMENTS = [
         why: 'without it the #toast-container is not rendered on the login page and the notification never initializes',
     },
     {
+        path: 'admin/mbissonho_remember_admin_last_page/active_entity_details',
+        expected: '1',
+        why: 'without it the login page renders entityDetailsActive:false and the entity-details toast never requests or shows (notification-entity-details.spec.js)',
+    },
+    {
         path: 'admin/security/admin_account_sharing',
         expected: '1',
         why: 'parallel tests sign the same admin in concurrently; with 0 the sessions invalidate each other',
