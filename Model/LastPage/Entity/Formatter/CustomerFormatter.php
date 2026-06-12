@@ -32,12 +32,12 @@ class CustomerFormatter implements EntityFormatterInterface
 
         $name = trim((string)$entity->getFirstname() . ' ' . (string)$entity->getLastname());
         if ($name !== '') {
-            $fields[] = ['label' => 'Name', 'value' => $this->textMask->mask($name)];
+            $fields[] = ['label' => (string)__('Name'), 'value' => $this->textMask->mask($name)];
         }
 
         $email = (string)$entity->getEmail();
         if ($email !== '') {
-            $fields[] = ['label' => 'Email', 'value' => $this->emailMask->mask($email)];
+            $fields[] = ['label' => (string)__('Email'), 'value' => $this->emailMask->mask($email)];
         }
 
         return $fields;

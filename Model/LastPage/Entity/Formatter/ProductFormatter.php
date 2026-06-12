@@ -27,12 +27,12 @@ class ProductFormatter implements EntityFormatterInterface
 
         $name = (string)$entity->getName();
         if ($name !== '') {
-            $fields[] = ['label' => 'Name', 'value' => $this->textMask->mask($name)];
+            $fields[] = ['label' => (string)__('Name'), 'value' => $this->textMask->mask($name)];
         }
 
         $sku = (string)$entity->getSku();
         if ($sku !== '') {
-            $fields[] = ['label' => 'SKU', 'value' => $this->textMask->mask($sku)];
+            $fields[] = ['label' => (string)__('SKU'), 'value' => $this->textMask->mask($sku)];
         }
 
         return $fields;

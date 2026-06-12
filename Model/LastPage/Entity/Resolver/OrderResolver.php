@@ -18,7 +18,7 @@ class OrderResolver implements EntityResolverInterface
 
     public function getLabel(): string
     {
-        return 'Order';
+        return (string)__('Order');
     }
 
     public function getAclResource(): string

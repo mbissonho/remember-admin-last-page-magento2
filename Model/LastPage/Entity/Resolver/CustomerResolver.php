@@ -18,7 +18,7 @@ class CustomerResolver implements EntityResolverInterface
 
     public function getLabel(): string
     {
-        return 'Customer';
+        return (string)__('Customer');
     }
 
     public function getAclResource(): string

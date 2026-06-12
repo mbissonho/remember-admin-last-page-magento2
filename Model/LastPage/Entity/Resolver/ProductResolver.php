@@ -18,7 +18,7 @@ class ProductResolver implements EntityResolverInterface
 
     public function getLabel(): string
     {
-        return 'Product';
+        return (string)__('Product');
     }
 
     public function getAclResource(): string

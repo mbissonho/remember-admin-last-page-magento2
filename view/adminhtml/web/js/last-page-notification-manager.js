@@ -155,7 +155,10 @@ define([
             const toast = $('<div class="toast toast-entity-details"></div>');
 
             if (details.label) {
-                toast.append($('<div class="toast-entity-label"></div>').text(String($t(details.label))));
+                // Already localised server-side (EntityPreview runs as an
+                // authenticated adminhtml request, so it resolves to the
+                // restoring user's interface locale). No client-side $t here.
+                toast.append($('<div class="toast-entity-label"></div>').text(String(details.label)));
             }
 
             fields.forEach(function (field) {
@@ -166,8 +169,9 @@ define([
                 const row = $('<div class="toast-entity-field"></div>');
 
                 if (field.label) {
+                    // Field labels are localised server-side as well.
                     row.append($('<span class="toast-entity-field-label"></span>')
-                        .text(String($t(field.label)) + ': '));
+                        .text(String(field.label) + ': '));
                 }
 
                 row.append($('<span class="toast-entity-field-value"></span>').text(String(field.value)));

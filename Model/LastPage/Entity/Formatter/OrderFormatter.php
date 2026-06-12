@@ -32,19 +32,19 @@ class OrderFormatter implements EntityFormatterInterface
 
         $increment = (string)$entity->getIncrementId();
         if ($increment !== '') {
-            $fields[] = ['label' => 'Order', 'value' => $this->textMask->mask($increment)];
+            $fields[] = ['label' => (string)__('Order'), 'value' => $this->textMask->mask($increment)];
         }
 
         $name = trim(
             (string)$entity->getCustomerFirstname() . ' ' . (string)$entity->getCustomerLastname()
         );
         if ($name !== '') {
-            $fields[] = ['label' => 'Customer', 'value' => $this->textMask->mask($name)];
+            $fields[] = ['label' => (string)__('Customer'), 'value' => $this->textMask->mask($name)];
         }
 
         $email = (string)$entity->getCustomerEmail();
         if ($email !== '') {
-            $fields[] = ['label' => 'Email', 'value' => $this->emailMask->mask($email)];
+            $fields[] = ['label' => (string)__('Email'), 'value' => $this->emailMask->mask($email)];
         }
 
         return $fields;
