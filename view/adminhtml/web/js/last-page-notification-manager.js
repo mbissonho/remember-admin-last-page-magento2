@@ -91,8 +91,21 @@ define([
                 complete: function (jqXHR) {
                     //Override ajaxSetup to avoid page reload
                 },
-                error: function (response) {
-                    console.warn(response);
+                error: function (jqXHR, textStatus) {
+                    // A non-JSON body (parsererror) means the poll was redirected
+                    // into an auth flow — typically the 2FA challenge when the admin
+                    // has entered credentials in another tab but not yet cleared 2FA.
+                    // The keyless endpoint answers TwoFactorAuth's predispatch with a
+                    // 302, which the browser transparently follows to an HTML page.
+                    // That is an expected, transient state: keep polling quietly until
+                    // the session can answer with JSON again, rather than surfacing it
+                    // as an error.
+                    if (textStatus === 'parsererror') {
+                        self.linkDisplayed = false;
+                        return;
+                    }
+
+                    console.warn(jqXHR);
                 }
             });
         },
@@ -137,8 +150,16 @@ define([
                         self.displayEntityDetails(response.details);
                     }
                 },
-                error: function (response) {
-                    console.warn(response);
+                error: function (jqXHR, textStatus) {
+                    // Same transient auth-flow redirect as checkIfAdminUserIsLoggedIn:
+                    // while 2FA is still pending the preview endpoint 302s into the
+                    // challenge, so a parsererror just means "no details yet" — stay
+                    // silent and let the next poll retry.
+                    if (textStatus === 'parsererror') {
+                        return;
+                    }
+
+                    console.warn(jqXHR);
                 }
             });
         },
