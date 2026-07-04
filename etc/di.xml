@@ -6,6 +6,14 @@
                 type="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\EntityContext"/>
 
     <!--
+        "Fully authenticated" = credentials plus every enabled second factor. Used
+        to gate disclosure of the resumed entity's details, which must not leak to
+        an admin who has passed the password but not yet a required 2FA.
+    -->
+    <preference for="Mbissonho\RememberAdminLastPage\Model\Auth\CompletedAdminAuthenticationInterface"
+                type="Mbissonho\RememberAdminLastPage\Model\Auth\CompletedAdminAuthentication"/>
+
+    <!--
         Default masking strategy. Any MaskingStrategyInterface that is not wired
         explicitly resolves to the interleaved "hide every other character" mask.
     -->

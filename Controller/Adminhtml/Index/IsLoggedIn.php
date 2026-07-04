@@ -8,6 +8,7 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Mbissonho\RememberAdminLastPage\Model\Config;
@@ -48,6 +49,7 @@ class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
     protected AuthSession $authSession;
     protected UrlInterface $url;
     protected RequestInterface $request;
+    protected ResponseInterface $response;
     protected Config $config;
     protected RoutePath $routePath;
 
@@ -56,6 +58,7 @@ class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
         AuthSession $authSession,
         UrlInterface $url,
         RequestInterface $request,
+        ResponseInterface $response,
         Config $config,
         RoutePath $routePath
     ) {
@@ -63,6 +66,7 @@ class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
         $this->authSession = $authSession;
         $this->url = $url;
         $this->request = $request;
+        $this->response = $response;
         $this->config = $config;
         $this->routePath = $routePath;
     }
@@ -117,6 +121,25 @@ class IsLoggedIn implements HttpGetActionInterface, CsrfAwareActionInterface
         }
 
         return $this->url->getUrl($path, $params);
+    }
+
+    /**
+     * Expose the shared application response.
+     *
+     * Magento_TwoFactorAuth's controller_action_predispatch observer redirects a
+     * request by calling getResponse()->setRedirect() on the matched controller.
+     * Being a keyless ActionInterface (not an AbstractAction), this controller has
+     * no such accessor, so under enforced 2FA that predispatch would fatal before
+     * execute() ever runs. Returning the same ResponseInterface the FrontController
+     * holds lets the observer issue a clean 302 to the 2FA challenge: it also sets
+     * FLAG_NO_DISPATCH, so FrontController returns this response and skips execute()
+     * (see FrontController::getActionResponse). No dependency on the 2FA module is
+     * introduced — this is a plain framework accessor, inert unless some predispatch
+     * observer chooses to redirect.
+     */
+    public function getResponse(): ResponseInterface
+    {
+        return $this->response;
     }
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
