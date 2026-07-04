@@ -64,6 +64,18 @@ RUN wget --tries=5 --waitretry=15 --retry-on-http-error=429,500,502,503,504 \
     -O /tmp/magento.tar.gz \
     "https://github.com/magento/magento2/archive/refs/tags/${MAGENTO_VERSION}.tar.gz"
 
+# The magento/magento2 source archive above does NOT bundle the security-package
+# (Magento_TwoFactorAuth, ReCaptcha, ...) that the CE metapackage would pull in from
+# repo.magento.com. Without Magento_TwoFactorAuth this install is unrepresentative of
+# a real store and setup:di:compile fails to autoload the 2FA types that modules
+# reference. Fetch the Apache-2.0 source here (auth-free — no Marketplace keys); the
+# TwoFactorAuth module is dropped into app/code by install_magento.sh, which pulls
+# its third-party libs from packagist. Keep aligned with MAGENTO_VERSION's patch line.
+ARG SECURITY_PACKAGE_VERSION=1.1.7-p5
+RUN wget --tries=5 --waitretry=15 --retry-on-http-error=429,500,502,503,504 \
+    -O /tmp/security-package.tar.gz \
+    "https://github.com/magento/security-package/archive/refs/tags/${SECURITY_PACKAGE_VERSION}.tar.gz"
+
 RUN chmod +x /tmp/install_magento.sh
 RUN chmod +x /tmp/install_extension.sh
 

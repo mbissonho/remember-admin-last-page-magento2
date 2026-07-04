@@ -72,6 +72,37 @@ if [[ ! -d /var/www/html/vendor/magento ]]; then
 	composer install -n
 fi
 
+# Bring Magento_TwoFactorAuth into this monorepo install. The magento/magento2 source
+# archive extracted above omits the security-package that the CE metapackage would
+# provide, so a plain monorepo has no Magento_TwoFactorAuth — unrepresentative of a
+# real store, and setup:di:compile of any module referencing 2FA types cannot autoload
+# the class. Drop the module into app/code (the monorepo maps Magento\ -> app/code/
+# Magento, so PSR-4 resolves the new files with no dump-autoload) and pull only its
+# third-party libs from packagist (its magento/* deps already ship in the monorepo,
+# which does not `replace` this package). All auth-free. Idempotent: skip when the
+# app volume already carries it (local `act` reuse).
+if [[ ! -d app/code/Magento/TwoFactorAuth && -e /tmp/security-package.tar.gz ]]; then
+	echo "Injecting Magento_TwoFactorAuth from the security-package source."
+	mkdir -p /tmp/security-package
+	tar -xf /tmp/security-package.tar.gz -C /tmp/security-package --strip-components 1
+	mkdir -p app/code/Magento/TwoFactorAuth
+	cp -R /tmp/security-package/TwoFactorAuth/. app/code/Magento/TwoFactorAuth/
+
+	# Require exactly the constraints the module declares (read from its own
+	# composer.json), minus php and the magento/* deps the monorepo already provides,
+	# so the lib set never drifts from the fetched SECURITY_PACKAGE_VERSION.
+	TFA_LIBS=$(php -r '
+		$r = json_decode(file_get_contents("app/code/Magento/TwoFactorAuth/composer.json"), true)["require"] ?? [];
+		foreach ($r as $p => $c) {
+			if ($p === "php" || strpos($p, "magento/") === 0) { continue; }
+			echo escapeshellarg($p . ":" . $c), " ";
+		}
+	')
+	if [[ -n "$TFA_LIBS" ]]; then
+		eval "composer require --no-interaction $TFA_LIBS"
+	fi
+fi
+
 # Normalize permissions before any bin/magento call (idempotent and cheap).
 find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} + 2>/dev/null
 find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} + 2>/dev/null
