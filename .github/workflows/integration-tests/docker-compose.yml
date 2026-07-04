@@ -14,14 +14,15 @@
 # act both fails to expose by hostname to the extdn action (nektos/act#944) and
 # starts anyway — grabbing ports 3306/9200 and conflicting with these containers.
 #
-# Usage:
+# Usage (one flow at a time — the two flows would otherwise share the same
+# magento2/magento2test DB here; the down -v/up between them gives each a clean DB):
 #   1. Start deps and wait until healthy:
 #        docker compose -f .github/workflows/integration-tests/docker-compose.yml up -d --wait
-#   2. Run the LOCAL workflow, attaching act's containers to this network so the
-#      extdn action can resolve `mysql` and `es`:
+#   2. Run the LOCAL workflow for a single flow, attaching act's containers to this
+#      network so the extdn action can resolve `mysql` and `es`:
 #        gh act push -W .github/workflows/integration-tests/act-integration.yml -j run \
-#          --network integration-local
-#   3. Tear down:
+#          --matrix flow:tfa-off --network integration-local
+#   3. Tear down (and repeat 1-3 with --matrix flow:tfa-on for the other flow):
 #        docker compose -f .github/workflows/integration-tests/docker-compose.yml down -v
 #
 # Note: keep running `act` with `-W` (as above). A non-workflow YAML living under
