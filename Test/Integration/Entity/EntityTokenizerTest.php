@@ -9,6 +9,9 @@ use Mbissonho\RememberAdminLastPage\Api\Data\EntityContextInterfaceFactory;
 use Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\EntityTokenizer;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @group mbissonho-ralp-tfa-agnostic
+ */
 class EntityTokenizerTest extends TestCase
 {
     private EntityTokenizer $tokenizer;

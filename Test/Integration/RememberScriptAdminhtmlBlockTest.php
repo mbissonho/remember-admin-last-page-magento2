@@ -6,6 +6,7 @@ use Magento\TestFramework\TestCase\AbstractBackendController;
 
 /**
  * @magentoDbIsolation enabled
+ * @group mbissonho-ralp-tfa-agnostic
  */
 class RememberScriptAdminhtmlBlockTest extends AbstractBackendController
 {

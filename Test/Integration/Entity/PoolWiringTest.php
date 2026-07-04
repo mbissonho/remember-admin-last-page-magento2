@@ -17,6 +17,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Guards the di.xml wiring of the bundled resolver/formatter pools.
+ *
+ * @group mbissonho-ralp-tfa-agnostic
  */
 class PoolWiringTest extends TestCase
 {

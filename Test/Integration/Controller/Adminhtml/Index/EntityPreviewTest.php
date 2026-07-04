@@ -10,6 +10,7 @@ use Magento\Framework\AuthorizationInterface;
 use Magento\TestFramework\TestCase\AbstractBackendController;
 use Mbissonho\RememberAdminLastPage\Api\Data\EntityContextInterfaceFactory;
 use Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\EntityTokenizer;
+use Mbissonho\RememberAdminLastPage\Test\Integration\SatisfiesSecondFactorWhenEnabled;
 
 /**
  * Covers the security gates of the keyless preview endpoint
@@ -21,9 +22,12 @@ use Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\EntityTokenizer;
  *
  * @magentoAppArea adminhtml
  * @magentoDbIsolation enabled
+ * @group mbissonho-ralp-tfa-agnostic
  */
 class EntityPreviewTest extends AbstractBackendController
 {
+    use SatisfiesSecondFactorWhenEnabled;
+
     private const URI = 'backend/mbissonho_ralp/index/entityPreview';
     private const CUSTOMER_ACL = 'Magento_Customer::manage';
     private const ORDER_ACL = 'Magento_Sales::actions_view';
@@ -37,12 +41,16 @@ class EntityPreviewTest extends AbstractBackendController
     protected function setUp(): void
     {
         parent::setUp();
+        // Keyless controller: BypassTwoFactorAuth cannot reach it, so pre-clear 2FA
+        // when the module is enabled to keep this TFA-agnostic test valid in both
+        // flows. No-op on a TFA-disabled install.
+        $this->satisfySecondFactorWhenEnabled();
         $this->tokenizer = $this->_objectManager->get(EntityTokenizer::class);
         $this->contextFactory = $this->_objectManager->get(EntityContextInterfaceFactory::class);
     }
 
     /**
-     * 5. Unauthenticated session: even with the feature on and a server-minted
+     * Unauthenticated session: even with the feature on and a server-minted
      * token for a resolvable customer, a logged-out caller learns nothing.
      *
      * @magentoConfigFixture admin/mbissonho_remember_admin_last_page/active 1
@@ -61,7 +69,7 @@ class EntityPreviewTest extends AbstractBackendController
     }
 
     /**
-     * 9. Tamper-evidence: a server-minted token whose ciphertext was altered by a
+     * Tamper-evidence: a server-minted token whose ciphertext was altered by a
      * single byte fails integrity verification and discloses nothing, so the
      * endpoint cannot be driven with a forged {type, id}.
      *
@@ -83,7 +91,7 @@ class EntityPreviewTest extends AbstractBackendController
     }
 
     /**
-     * 11. ACL gate: an admin who has been denied the entity's own resource gets
+     * ACL gate: an admin who has been denied the entity's own resource gets
      * nothing back even for a valid token pointing at a resolvable customer.
      *
      * @magentoConfigFixture admin/mbissonho_remember_admin_last_page/active 1
@@ -101,7 +109,7 @@ class EntityPreviewTest extends AbstractBackendController
     }
 
     /**
-     * 12. Per-entity isolation: denying the order resource must not bleed into the
+     * Per-entity isolation: denying the order resource must not bleed into the
      * customer resource. The same session that can still view customers is
      * blocked from previewing an order, proving the gate consults the resolved
      * entity's own resource rather than a blanket one.
@@ -129,7 +137,7 @@ class EntityPreviewTest extends AbstractBackendController
     }
 
     /**
-     * 15. Happy path: a logged-in admin with the resource and the feature on gets
+     * Happy path: a logged-in admin with the resource and the feature on gets
      * the entity label and partially masked fields — never the raw PII.
      *
      * @magentoConfigFixture admin/mbissonho_remember_admin_last_page/active 1
