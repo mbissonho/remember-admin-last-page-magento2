@@ -13,7 +13,7 @@ namespace Mbissonho\RememberAdminLastPage\Model\Session;
  * sharing the same admin session. Access these via the session's explicit
  * getData()/setData()/unsetData() so the real key stays visible and defined once.
  */
-final class AuthStorageKey
+class AuthStorageKey
 {
     /**
      * Module-scoped prefix: vendor + RememberAdminLastPage acronym.
