@@ -5,9 +5,23 @@ name: Static Tests
 # ship in magento/magento-coding-standard and run against the source directly, so
 # this job stays light and gives fast feedback on every push/PR.
 on:
+  # Skip runs whose diff is only docs or repo meta — nothing the module ships to
+  # or executes on the platform. Anything else (source, Test/, e2e/, CI harness)
+  # still triggers, because paths-ignore only skips a push when EVERY changed file
+  # matches. Keep this list in sync across the three workflows.
   push:
     branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
 
 jobs:
   phpcs:

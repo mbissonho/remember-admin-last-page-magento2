@@ -1,13 +1,27 @@
 name: Integration Tests
 on:
+  # Skip runs whose diff is only docs or repo meta — nothing the module ships to
+  # or executes on the platform. Anything else (source, Test/, e2e/, CI harness)
+  # still triggers, because paths-ignore only skips a push when EVERY changed file
+  # matches. Keep this list in sync across the three workflows.
   push:
     branches:
       - main
       - 'feature/**'
       - 'fix/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
   pull_request:
     branches:
       - 'main'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
 jobs:
   run:
     # Two flows, one job definition. Each entry differs only by which groups run
