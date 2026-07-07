@@ -23,11 +23,20 @@ class CompletedAdminAuthentication implements CompletedAdminAuthenticationInterf
 
     private ?SecondFactorGuardInterface $twoFactorAuthGuard = null;
 
+    private AuthSession $authSession;
+
+    private ModuleManager $moduleManager;
+
+    private TwoFactorAuthGuardFactory $twoFactorAuthGuardFactory;
+
     public function __construct(
-        private readonly AuthSession $authSession,
-        private readonly ModuleManager $moduleManager,
-        private readonly TwoFactorAuthGuardFactory $twoFactorAuthGuardFactory
+        AuthSession $authSession,
+        ModuleManager $moduleManager,
+        TwoFactorAuthGuardFactory $twoFactorAuthGuardFactory
     ) {
+        $this->authSession = $authSession;
+        $this->moduleManager = $moduleManager;
+        $this->twoFactorAuthGuardFactory = $twoFactorAuthGuardFactory;
     }
 
     public function isComplete(): bool

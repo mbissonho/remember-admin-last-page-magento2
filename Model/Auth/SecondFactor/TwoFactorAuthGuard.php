@@ -20,10 +20,16 @@ use Mbissonho\RememberAdminLastPage\Model\Auth\SecondFactorGuardInterface;
  */
 class TwoFactorAuthGuard implements SecondFactorGuardInterface
 {
+    private TfaSessionInterface $tfaSession;
+
+    private UserContextInterface $userContext;
+
     public function __construct(
-        private readonly TfaSessionInterface $tfaSession,
-        private readonly UserContextInterface $userContext
+        TfaSessionInterface $tfaSession,
+        UserContextInterface $userContext
     ) {
+        $this->tfaSession = $tfaSession;
+        $this->userContext = $userContext;
     }
 
     public function isSatisfied(): bool

@@ -15,7 +15,9 @@ worth it before clicking, instead of jumping to a page they no longer need.
 ## Prerequisites
 
 - Magento Open Source version 2.4.x
-- PHP 7.4+
+- PHP 7.4 – 8.5. PHP **8.2+ is recommended**: earlier versions are past their
+  active-support window under Adobe Commerce's
+  [lifecycle policy](https://experienceleague.adobe.com/en/docs/commerce-operations/release/planning/lifecycle-policy).
 
 ## Installation
 
