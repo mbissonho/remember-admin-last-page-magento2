@@ -1,0 +1,62 @@
+name: Static Tests
+
+# PHP_CodeSniffer against the Magento2 coding standard. Unlike the integration and
+# e2e workflows, this needs no Magento install (no DB/ES/setup:install): the sniffs
+# ship in magento/magento-coding-standard and run against the source directly, so
+# this job stays light and gives fast feedback on every push/PR.
+on:
+  # Skip runs whose diff is only docs or repo meta — nothing the module ships to
+  # or executes on the platform. Anything else (source, Test/, e2e/, CI harness)
+  # still triggers, because paths-ignore only skips a push when EVERY changed file
+  # matches. Keep this list in sync across the three workflows.
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
+
+jobs:
+  phpcs:
+    name: PHPCS (Magento2 / PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [ "8.4" ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer:v2, cs2pr
+          coverage: none
+
+      # The "Magento2" sniffs live in magento/magento-coding-standard. Install it
+      # OUTSIDE the checkout (runner.temp) so phpcs never lints the standard's own
+      # vendor tree — this keeps `phpcs .` scoped to just this module's source.
+      - name: Install Magento Coding Standard
+        run: composer create-project --no-progress --quiet magento/magento-coding-standard "${{ runner.temp }}/mcs"
+
+      # -n = errors only (mirrors the local `phpcs -p . --standard=magento2 -n`).
+      # Drop it to also surface warnings. --report-checkstyle feeds cs2pr below.
+      - name: Run PHPCS (Magento2)
+        run: >
+          "${{ runner.temp }}/mcs/vendor/bin/phpcs"
+          -p . --standard=Magento2 --parallel=10 -n
+          --extensions=php,phtml
+          --report-full --report-checkstyle=phpcs-report.xml
+
+      # Surface each violation as an inline annotation on the PR diff.
+      - name: Annotate PR with findings
+        if: ${{ failure() }}
+        run: cs2pr phpcs-report.xml

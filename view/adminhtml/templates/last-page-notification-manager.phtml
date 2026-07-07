@@ -1,0 +1,19 @@
+<?php
+/* @var LastPageNotificationManager $block */
+/* @var $escaper Escaper */
+
+use Magento\Framework\Escaper;
+use Mbissonho\RememberAdminLastPage\Block\Adminhtml\LastPageNotificationManager;
+
+?>
+<?php if($block->isNotificationManagerActive()): ?>
+<div id="toast-container" class="toast-container"
+     data-mage-init='{"Mbissonho_RememberAdminLastPage/js/last-page-notification-manager": {
+        "backendUrl": "<?= $escaper->escapeUrl($block->getBackendUrl()) ?>",
+        "entityPreviewUrl": "<?= $escaper->escapeUrl($block->getEntityPreviewUrl()) ?>",
+        "entityDetailsActive": <?= $block->isEntityDetailsActive() ? 'true' : 'false' ?>,
+        "hasSavedPageNotificationMessage": "<?= $escaper->escapeHtml($block->hasSavedPageNotificationMessage()) ?>",
+        "goToTheSavedPageNotificationMessage": "<?= $escaper->escapeHtml($block->goToTheSavedPageNotificationMessage()) ?>",
+        "loginPageTitleBlinkMessage": "<?= $escaper->escapeHtml($block->loginPageTitleBlinkMessage()) ?>"
+     }}'></div>
+<?php endif; ?>

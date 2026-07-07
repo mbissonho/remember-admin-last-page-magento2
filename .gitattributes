@@ -1,0 +1,9 @@
+# Dev-only paths: excluded from the distributed package (git archive / Composer
+# dist). They have no runtime role, so they should not land in a consumer's
+# vendor/ directory. Markdown docs (README, CHANGELOG, LICENSE) are intentionally
+# kept so they ship with the installed package.
+/Test               export-ignore
+/e2e                export-ignore
+/.github            export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore

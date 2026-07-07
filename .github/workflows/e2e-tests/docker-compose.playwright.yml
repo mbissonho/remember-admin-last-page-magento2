@@ -1,4 +1,3 @@
-version: '3'
 services:
   playwright:
     image: mcr.microsoft.com/playwright:v1.50.1
@@ -13,7 +12,16 @@ services:
       - MAGENTO_ADMIN_USERNAME
       - MAGENTO_ADMIN_PASSWORD
       - CI
+      # Tell global-setup.js to run the Magento CLI inside the e2e-magento2 container
+      # (reached through the mounted Docker socket below).
+      - MAGENTO_CLI_IN_CONTAINER
+      - MAGENTO_CLI_CONTAINER
+      - MAGENTO_CLI_CONTAINER_USER
+      - MAGENTO_ROOT
     volumes:
       - ../../../:/tmp/module
+      # Lets the Playwright container reach the host Docker daemon so global-setup.js
+      # can `docker exec` into the Magento container to verify the store scenario.
+      - /var/run/docker.sock:/var/run/docker.sock
 networks:
   backend:

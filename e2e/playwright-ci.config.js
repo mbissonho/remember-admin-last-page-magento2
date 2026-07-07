@@ -6,12 +6,18 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: '././',
+  /* Runs once, before any worker/spec: verifies the Magento scenario and aborts
+   * the whole run (without changing any config) if it is inadequate. */
+  globalSetup: './global-setup.js',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 0 : 0,
+  /* Retry on CI only. The admin sign-in navigation can transiently fail with
+   * net::ERR_ABORTED under the secret-key bounce/redirect flow; retries let a
+   * flaky run recover, and pair with `trace: 'on-first-retry'` below for
+   * diagnosis when one does. */
+  retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */

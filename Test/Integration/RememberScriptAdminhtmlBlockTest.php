@@ -6,6 +6,7 @@ use Magento\TestFramework\TestCase\AbstractBackendController;
 
 /**
  * @magentoDbIsolation enabled
+ * @group mbissonho-ralp-tfa-agnostic
  */
 class RememberScriptAdminhtmlBlockTest extends AbstractBackendController
 {
@@ -27,7 +28,7 @@ class RememberScriptAdminhtmlBlockTest extends AbstractBackendController
      * @magentoConfigFixture admin/mbissonho_remember_admin_last_page/active 0
      * @magentoAppIsolation enabled
      */
-    public function testHtmlDoesNotContainsRememberScriptOnceModuleIsEnabled()
+    public function testHtmlDoesNotContainsRememberScriptOnceModuleIsNotEnabled()
     {
         $this->dispatch('backend/customer/index/index/');
 

@@ -1,0 +1,77 @@
+# LOCAL-ONLY workflow for running the integration tests with `gh act`.
+#
+# It covers the same two flows as ../../integration-tests.yml (tfa-off / tfa-on),
+# but is deliberately structured differently for `act`:
+#
+#  1. No `services:` block. nektos/act (#944) does not make a job service's
+#     hostname resolvable from a Docker *container action* (the extdn action is
+#     one), so the action fails with `getaddrinfo for host "mysql"`; act also
+#     starts those services anyway and grabs 3306/9200. The MySQL/Elasticsearch
+#     dependencies come from docker-compose.yml in this folder instead, on a
+#     shared network the extdn action joins via `act --network`.
+#
+#  2. Two DISCRETE jobs (`tfa_off`, `tfa_on`) instead of a matrix. act
+#     mis-reports the overall run when ONE combination of a matrix job fails
+#     (nektos/act#1518): running both flows lets act run the sibling combo,
+#     which then races the other on the shared MySQL, and the whole run is
+#     flagged `Job failed` even though the flow you care about passed. Discrete
+#     jobs let you run exactly one with `-j`, with no sibling and no matrix
+#     result aggregation — so a green flow reports green.
+#
+# This file lives under .github/workflows/<subdir>/, which GitHub never executes
+# (GitHub only runs workflows directly in .github/workflows/), so it stays
+# strictly local. ../../integration-tests.yml remains the CI source of truth and
+# keeps the matrix (on GitHub each combo gets its own runner + fresh services,
+# so neither #944 nor #1518 applies there).
+#
+# Usage (run ONE job per invocation with `-j`):
+#   docker compose -f .github/workflows/integration-tests/docker-compose.yml up -d --wait
+#   gh act push -W .github/workflows/integration-tests/act-integration.yml \
+#     -j tfa_off --network integration-local
+#   docker compose -f .github/workflows/integration-tests/docker-compose.yml down -v
+#   # then repeat for the other flow:
+#   docker compose -f .github/workflows/integration-tests/docker-compose.yml up -d --wait
+#   gh act push -W .github/workflows/integration-tests/act-integration.yml \
+#     -j tfa_on --network integration-local
+#   docker compose -f .github/workflows/integration-tests/docker-compose.yml down -v
+#
+# Keep the two jobs' inputs in sync with the matrix in ../../integration-tests.yml.
+
+name: Integration Tests (local/act)
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  # Native Magento_TwoFactorAuth disabled; runs no-tfa + tfa-agnostic groups.
+  tfa_off:
+    name: tfa-off (M2.4.8-p5 / PHP8.4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Magento 2.4.8-p5 Integration Tests (tfa-off, Php8.4)
+        uses: extdn/github-actions-m2/magento-integration-tests/8.4@master
+        with:
+          module_name: Mbissonho_RememberAdminLastPage
+          composer_name: mbissonho/module-remember-admin-last-page
+          magento_version: 2.4.8-p5
+          phpunit_file: .github/workflows/integration-tests/phpunit-tfa-off.xml
+          # Reset the integration DBs before setup:install so the reused
+          # docker-compose MySQL never aborts on a leftover schema.
+          magento_pre_install_script: .github/workflows/integration-tests/reset-integration-db.sh
+          magento_post_install_script: .github/workflows/integration-tests/disable-native-tfa.sh
+
+  # Native Magento_TwoFactorAuth enabled (default); runs tfa + tfa-agnostic groups.
+  tfa_on:
+    name: tfa-on (M2.4.8-p5 / PHP8.4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Magento 2.4.8-p5 Integration Tests (tfa-on, Php8.4)
+        uses: extdn/github-actions-m2/magento-integration-tests/8.4@master
+        with:
+          module_name: Mbissonho_RememberAdminLastPage
+          composer_name: mbissonho/module-remember-admin-last-page
+          magento_version: 2.4.8-p5
+          phpunit_file: .github/workflows/integration-tests/phpunit-tfa-on.xml
+          magento_pre_install_script: .github/workflows/integration-tests/reset-integration-db.sh
+          # tfa-on leaves native 2FA enabled, so no post-install script.

@@ -1,11 +1,15 @@
 {
     "name": "mbissonho/module-remember-admin-last-page",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "This module allow a admin user to come back to the same page(order, customer or config management) when it's session expires.",
     "type": "magento2-module",
     "require": {
+        "php": ">=7.4 <8.6",
         "magento/framework": "*",
-        "magento/module-backend": "*"
+        "magento/module-backend": "*",
+        "magento/module-sales": "*",
+        "magento/module-customer": "*",
+        "magento/module-catalog": "*"
     },
     "license": [
         "Apache-2.0"
@@ -17,6 +21,7 @@
     ],
     "scripts": {
         "php74-compatibility": "phpcs --parallel=10 --extensions=php,phtml -p . --standard=PHPCompatibility --runtime-set testVersion 7.4-",
+        "php84-compatibility": "phpcs --parallel=10 --extensions=php,phtml -p . --standard=PHPCompatibility --runtime-set testVersion 8.4-",
         "magento2-standard": "phpcs -p . --standard=magento2 -n --parallel=10"
     },
     "autoload": {

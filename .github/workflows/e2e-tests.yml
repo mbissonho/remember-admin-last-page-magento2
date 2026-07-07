@@ -1,17 +1,33 @@
 name: E2E Tests
 on:
+  # Skip runs whose diff is only docs or repo meta — nothing the module ships to
+  # or executes on the platform. Anything else (source, Test/, e2e/, CI harness)
+  # still triggers, because paths-ignore only skips a push when EVERY changed file
+  # matches. Keep this list in sync across the three workflows.
   push:
     branches:
       - main
+      - 'feature/**'
+      - 'fix/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
   pull_request:
     branches:
       - 'main'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
 jobs:
   run:
     strategy:
       matrix:
-        php-version: ["8.3"]
-        magento-version: [ "2.4.7-p4"]
+        php-version: ["8.4"]
+        magento-version: [ "2.4.8-p5"]
     runs-on: ubuntu-latest
     env:
       PHP_VERSION: ${{ matrix.php-version }}
@@ -22,6 +38,8 @@ jobs:
       MAGENTO_BASE_URL: http://magento2.test.com
     steps:
       - uses: actions/checkout@v3
+      - name: Build web image (no cache)
+        run: docker compose -f .github/workflows/e2e-tests/docker-compose.yml build --no-cache web
       - name: Install Magento
         run: |
           docker compose -f .github/workflows/e2e-tests/docker-compose.yml run --rm web bash -c "sed '/exec /d' /tmp/install_magento.sh | bash"
@@ -44,6 +62,13 @@ jobs:
           bash -c "chmod +x /tmp/module/.github/workflows/e2e-tests/run-e2e.sh && /tmp/module/.github/workflows/e2e-tests/run-e2e.sh"
         env:
           CI: TRUE
+          # global-setup.js verifies the store scenario by exec-ing the Magento CLI
+          # inside the e2e-magento2 container (via the Docker socket mounted into the
+          # Playwright container in docker-compose.playwright.yml).
+          MAGENTO_CLI_IN_CONTAINER: "true"
+          MAGENTO_CLI_CONTAINER: e2e-magento2
+          MAGENTO_CLI_CONTAINER_USER: www-data
+          MAGENTO_ROOT: /var/www/html
       - name: Archive test result artifacts
         if: always()
         uses: actions/upload-artifact@v4

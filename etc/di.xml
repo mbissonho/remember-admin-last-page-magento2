@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <preference for="Mbissonho\RememberAdminLastPage\Api\Data\EntityContextInterface"
+                type="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\EntityContext"/>
+
+    <!--
+        "Fully authenticated" = credentials plus every enabled second factor. Used
+        to gate disclosure of the resumed entity's details, which must not leak to
+        an admin who has passed the password but not yet a required 2FA.
+    -->
+    <preference for="Mbissonho\RememberAdminLastPage\Model\Auth\CompletedAdminAuthenticationInterface"
+                type="Mbissonho\RememberAdminLastPage\Model\Auth\CompletedAdminAuthentication"/>
+
+    <!--
+        Default masking strategy. Any MaskingStrategyInterface that is not wired
+        explicitly resolves to the interleaved "hide every other character" mask.
+    -->
+    <preference for="Mbissonho\RememberAdminLastPage\Api\MaskingStrategyInterface"
+                type="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Masking\InterleavedMask"/>
+
+    <!--
+        Capture side: route_path -> {entity_type_code, id_param}. Add an <item>
+        here to remember a new page declaratively; add a detector to the pool
+        below for routes that need custom id extraction.
+
+        entity_type_code is the join key shared with the resolver/formatter pools.
+        Namespace it with the vendor that OWNS the entity (vendor_entity) — the
+        first segment of the model's namespace: magento_order for Magento's sales
+        order, acme_subscription for your own Acme\Subscription\Model\Subscription.
+        Keying by the entity's owner (not by whoever wires it) means two modules
+        that describe the same entity converge on one code, while genuinely
+        different entities never collide on a bare word like "order".
+    -->
+    <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Detector\ConfigMapDetector">
+        <arguments>
+            <argument name="map" xsi:type="array">
+                <item name="sales/order/view" xsi:type="array">
+                    <item name="entity_type_code" xsi:type="string">magento_order</item>
+                    <item name="id_param" xsi:type="string">order_id</item>
+                </item>
+                <item name="customer/index/edit" xsi:type="array">
+                    <item name="entity_type_code" xsi:type="string">magento_customer</item>
+                    <item name="id_param" xsi:type="string">id</item>
+                </item>
+                <item name="catalog/product/edit" xsi:type="array">
+                    <item name="entity_type_code" xsi:type="string">magento_product</item>
+                    <item name="id_param" xsi:type="string">id</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\DetectorPool">
+        <arguments>
+            <argument name="detectors" xsi:type="array">
+                <item name="config_map" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Detector\ConfigMapDetector</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\ResolverPool">
+        <arguments>
+            <argument name="resolvers" xsi:type="array">
+                <item name="magento_order" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\OrderResolver</item>
+                <item name="magento_customer" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\CustomerResolver</item>
+                <item name="magento_product" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Resolver\ProductResolver</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Pool\FormatterPool">
+        <arguments>
+            <argument name="formatters" xsi:type="array">
+                <item name="magento_order" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\OrderFormatter</item>
+                <item name="magento_customer" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\CustomerFormatter</item>
+                <item name="magento_product" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\ProductFormatter</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!--
+        Formatters: textMask resolves to InterleavedMask via the preference above;
+        the e-mail field gets the structure-preserving EmailMask explicitly.
+    -->
+    <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\OrderFormatter">
+        <arguments>
+            <argument name="emailMask" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Masking\EmailMask</argument>
+        </arguments>
+    </type>
+
+    <type name="Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Formatter\CustomerFormatter">
+        <arguments>
+            <argument name="emailMask" xsi:type="object">Mbissonho\RememberAdminLastPage\Model\LastPage\Entity\Masking\EmailMask</argument>
+        </arguments>
+    </type>
+
+</config>

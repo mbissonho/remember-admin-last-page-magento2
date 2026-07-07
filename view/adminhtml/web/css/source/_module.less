@@ -1,0 +1,42 @@
+.toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 9999;
+}
+
+.toast {
+    padding: 1rem 1.5rem;
+    background: #CCCCCC;
+    color: #000000;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    opacity: 1;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transform: translateX(0);
+
+    .fade-out {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+.toast-entity-details {
+    font-size: 1.2rem;
+
+    .toast-entity-label {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .toast-entity-field {
+        line-height: 1.4;
+    }
+
+    .toast-entity-field-label {
+        font-weight: 600;
+    }
+}

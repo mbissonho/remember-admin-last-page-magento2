@@ -1,41 +1,93 @@
 name: Integration Tests
 on:
+  # Skip runs whose diff is only docs or repo meta — nothing the module ships to
+  # or executes on the platform. Anything else (source, Test/, e2e/, CI harness)
+  # still triggers, because paths-ignore only skips a push when EVERY changed file
+  # matches. Keep this list in sync across the three workflows.
   push:
     branches:
       - main
+      - 'feature/**'
+      - 'fix/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
   pull_request:
     branches:
       - 'main'
-
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitattributes'
+      - '.gitignore'
 jobs:
   run:
+    # Two flows, one job definition. Each entry differs only by which groups run
+    # and whether native 2FA is disabled after install:
+    #   tfa-off  native Magento_TwoFactorAuth disabled (disable-native-tfa.sh),
+    #            runs no-tfa + tfa-agnostic groups.
+    #   tfa-on   extdn default install (native 2FA enabled), runs tfa +
+    #            tfa-agnostic groups; no post-install script (empty = skipped).
+    #
+    # This is the CI source of truth and it stays a MATRIX: on GitHub each
+    # combination runs on its own isolated runner with its own `services:` block
+    # (fresh MySQL/ES), so there is no shared-DB race and none of the act quirks
+    # that force the local mirror to diverge (nektos/act #944 services hostname,
+    # #1518 matrix exit mis-report). The local integration-tests/act-integration.yml
+    # deliberately drops `services:` and splits this matrix into two discrete jobs
+    # for `act` only — keep the two files in sync on INPUTS (module/composer names,
+    # magento_version, phpunit_file, pre/post-install scripts), not structure.
     strategy:
+      fail-fast: false
       matrix:
-        php-version: [ "8.3" ]
-        magento-version: [ "2.4.7-p4" ]
+        # `flow` is a real base dimension (not include-only) so it produces two
+        # concrete combinations; `include` only augments each combo with its
+        # phpunit_file/post_install.
+        flow: [ tfa-off, tfa-on ]
+        php-version: [ "8.4" ]
+        magento-version: [ "2.4.8-p5" ]
+        include:
+          - flow: tfa-off
+            phpunit_file: .github/workflows/integration-tests/phpunit-tfa-off.xml
+            post_install: .github/workflows/integration-tests/disable-native-tfa.sh
+          - flow: tfa-on
+            phpunit_file: .github/workflows/integration-tests/phpunit-tfa-on.xml
+            post_install: ""
+    name: ${{ matrix.flow }} (M${{ matrix.magento-version }} / PHP${{ matrix.php-version }})
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
-        options: --tmpfs /tmp:rw --tmpfs /var/lib/mysql:rw --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --tmpfs /tmp:rw --tmpfs /var/lib/mysql:rw --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
       es:
-        image: docker.io/wardenenv/elasticsearch:7.8
+        # Magento 2.4.8 is certified for Elasticsearch 8.11 / OpenSearch 2; the
+        # extdn action installs 2.4.8 with --search-engine=elasticsearch8, whose
+        # client rejects OpenSearch, so the search service must be Elasticsearch 8.
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.11.4
         ports:
           - 9200:9200
         env:
           'discovery.type': single-node
           'xpack.security.enabled': false
-          ES_JAVA_OPTS: "-Xms64m -Xmx512m"
-        options: --health-cmd="curl localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s" --health-interval=10s --health-timeout=5s --health-retries=3
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        options: --health-cmd="curl localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - uses: actions/checkout@v3
-      - name: Magento ${{ matrix.magento-version }} Integration Tests (Php${{ matrix.php-version }})
-        uses: extdn/github-actions-m2/magento-integration-tests/8.3@master
+      - name: Magento ${{ matrix.magento-version }} Integration Tests (${{ matrix.flow }}, Php${{ matrix.php-version }})
+        uses: extdn/github-actions-m2/magento-integration-tests/8.4@master
         with:
           module_name: Mbissonho_RememberAdminLastPage
           composer_name: mbissonho/module-remember-admin-last-page
           magento_version: ${{ matrix.magento-version }}
+          phpunit_file: ${{ matrix.phpunit_file }}
+          # Drops/recreates the integration DBs before setup:install so a reused
+          # MySQL (local act runs) never aborts on a leftover schema. No-op on CI
+          # (fresh MySQL service per job). Same for both flows.
+          magento_pre_install_script: .github/workflows/integration-tests/reset-integration-db.sh
+          magento_post_install_script: ${{ matrix.post_install }}

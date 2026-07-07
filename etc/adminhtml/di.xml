@@ -6,4 +6,33 @@
                 type="Mbissonho\RememberAdminLastPage\Plugin\AdminLogoutAfter"
         />
     </type>
+
+    <type name="Mbissonho\RememberAdminLastPage\Controller\Adminhtml\Index\IsLoggedIn">
+        <arguments>
+            <argument name="url" xsi:type="object">Magento\Backend\Model\UrlInterface\Proxy</argument>
+        </arguments>
+    </type>
+
+    <!--
+        Resume the last accessed page when the admin lands on the dashboard right
+        after login (see the plugin's class docblock). An afterExecute plugin is
+        used instead of a controller_action_predispatch observer so the resume can
+        never run on a request that Magento_TwoFactorAuth bounced to its challenge
+        page, and so it needs no Magento\Framework\App\ActionFlag.
+    -->
+    <type name="Magento\Backend\Controller\Adminhtml\Dashboard\Index">
+        <plugin name="mbissonho_remember_admin_last_page_resume_on_dashboard"
+                type="Mbissonho\RememberAdminLastPage\Plugin\Backend\ResumeLastPageOnDashboard"/>
+    </type>
+
+    <!--
+        Resume a stale-secret-key bounce back to its own page instead of the
+        dashboard, fully server-side (see the plugin's class docblock). Applies
+        to every admin controller that extends Magento\Backend\App\AbstractAction.
+    -->
+    <type name="Magento\Backend\App\AbstractAction">
+        <plugin name="mbissonho_remember_admin_last_page_resume_on_secret_key_bounce"
+                type="Mbissonho\RememberAdminLastPage\Plugin\Backend\ResumeOnSecretKeyBounce"/>
+    </type>
+
 </config>
