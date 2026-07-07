@@ -21,6 +21,7 @@
     ],
     "scripts": {
         "php74-compatibility": "phpcs --parallel=10 --extensions=php,phtml -p . --standard=PHPCompatibility --runtime-set testVersion 7.4-",
+        "php84-compatibility": "phpcs --parallel=10 --extensions=php,phtml -p . --standard=PHPCompatibility --runtime-set testVersion 8.4-",
         "magento2-standard": "phpcs -p . --standard=magento2 -n --parallel=10"
     },
     "autoload": {
