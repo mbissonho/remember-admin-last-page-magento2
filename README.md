@@ -72,9 +72,7 @@ tab is still worth it instead of jumping to a page they no longer need.
 
 For security, the preview details are only resolved and shown when the user is
 **already signed in elsewhere** — typically because they re-authenticated in another
-tab and this expired tab is still on the login screen. If there is no active
-authenticated admin session, the card stays empty: the module never discloses record
-details to an unauthenticated visitor.
+tab and this expired tab is still on the login screen. If there is no active authenticated admin session, the card stays hide: the module never discloses record details to an unauthenticated user.
 
 ![Entity preview card shown on the login page, with masked customer details](.assets/entity-preview.png)
 
