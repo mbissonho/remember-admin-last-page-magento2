@@ -8,16 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-06-08
 
 ### Added
-- Optional, opt-in entity details on the resume notification: it can now hint
-  which record (order, customer, product, …) the saved page was about.
-- Extensible architecture for it: per-`entity_type` resolver and formatter pools,
-  a route → entity map detector pool, and pluggable masking strategies — all
-  wired through `di.xml`, so new entity types are added without touching the
-  module's code.
-- Values shown are partially masked (interleaved character hiding, e-mail-aware
-  masking) and only disclosed to users holding the entity's own ACL resource.
-- The entity reference is sealed into an opaque, installation-keyed token before
-  it ever reaches the browser (confidential and tamper-evident).
+- Optional opt-in entity details preview on the resume notification: it can now hint which record (order, customer, product, …) the saved page was about. 
+  Values shown on entity details preview are partially masked (interleaved character hiding, e-mail-aware masking) and 
+  only disclosed to users holding the entity's own ACL resource. The entity reference is sealed into an opaque, 
+  installation-keyed token before it ever reaches the browser (confidential and tamper-evident).
 - Admin setting `Show entity details on notification` (off by default).
 - Unit and integration tests for the tokenizer, masking strategies and pool wiring.
 - Enforced-2FA awareness: the post-login resume and the login-page entity preview
